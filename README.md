@@ -4,4 +4,5 @@ with an optional image in the background.
 It's possible to select an area, zoom and pan.
 
 ##Overview
-![Overview](https://raw.githubusercontent.com/HanSolo/dataviewer/master/DataViewer.png)
+![Overview]
+(https://raw.githubusercontent.com/HanSolo/dataviewer/master/DataViewer.png)
