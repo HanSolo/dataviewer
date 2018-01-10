@@ -17,19 +17,20 @@
 package eu.hansolo.fx.dataviewer.tools;
 
 
-import eu.hansolo.fx.dataviewer.Series;
-import eu.hansolo.fx.dataviewer.Series.Symbol;
+import eu.hansolo.fx.dataviewer.Overlay;
 import eu.hansolo.fx.dataviewer.TickLabelOrientation;
 import javafx.scene.Node;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.util.Pair;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 
 public class Helper {
@@ -164,36 +165,15 @@ public class Helper {
         return Color.color(red, green, blue, opacity);
     }
 
-    public static final LinkedHashMap<Double, Double> convertDataPairsToMap(final String DATA_PAIRS) {
-        String[] dataArray       = DATA_PAIRS.trim().split(",");
-        int      dataArrayLength = dataArray.length;
-        LinkedHashMap<Double, Double> data = new LinkedHashMap<>(dataArrayLength / 2);
-        if (dataArrayLength % 2 != 0) { throw new IllegalArgumentException("DataPairs must contain an equal number of x,y coordinates"); }
-        for (int i = 1 ; i < dataArrayLength ; i+=2) {
-            data.put(Double.valueOf(dataArray[i - 1]), Double.valueOf(dataArray[i]));
+    public static final LinkedList<Pair<Double,Double>> convertXYPairsToList(final String XY_PAIRS) {
+        String[] pointsArray = XY_PAIRS.trim().split(",");
+        int      length      = pointsArray.length;
+        LinkedList<Pair<Double,Double>> points = new LinkedList<>();
+        if (length % 2 != 0) { throw new IllegalArgumentException("XYPairs must contain an equal number of x,y coordinates"); }
+        for (int i = 1 ; i < length ; i+=2) {
+            points.add(new Pair<>(Double.valueOf(pointsArray[i - 1]), Double.valueOf(pointsArray[i])));
         }
-        return data;
-    }
-
-    public static final Series convertDataPairsToDataSeries(final String DATA_PAIRS) {
-        return convertDataPairsToDataSeries(DATA_PAIRS, "", Color.RED, Symbol.NONE, false);
-    }
-    public static final Series convertDataParisToDataSeries(final String DATA_PAIRS, final Color COLOR) {
-        return convertDataPairsToDataSeries(DATA_PAIRS, "", COLOR, Symbol.NONE, false);
-    }
-    public static final Series convertDataPairsToDataSeries(final String DATA_PAIRS, final String NAME, final Color COLOR) {
-        return convertDataPairsToDataSeries(DATA_PAIRS, NAME, COLOR, Symbol.NONE, false);
-    }
-    public static final Series convertDataPairsToDataSeries(final String DATA_PAIRS, final String NAME, final Color COLOR, final Symbol SYMBOL) {
-        return convertDataPairsToDataSeries(DATA_PAIRS, NAME, COLOR, SYMBOL, false);
-    }
-    public static final Series convertDataParisToDataSeries(final String DATA_PAIRS, final Color COLOR, final Symbol SYMBOL) {
-        return convertDataPairsToDataSeries(DATA_PAIRS, "", COLOR, SYMBOL, false);
-    }
-    public static final Series convertDataPairsToDataSeries(final String DATA_PAIRS, final String NAME, final Color COLOR, final Symbol SYMBOL, final boolean CONNECTED) {
-        Map<Double, Double> data = convertDataPairsToMap(DATA_PAIRS);
-        Series series = new Series(data, NAME, COLOR, SYMBOL, CONNECTED);
-        return series;
+        return points;
     }
 
     public static final void enableNode(final Node NODE, final boolean ENABLE) {

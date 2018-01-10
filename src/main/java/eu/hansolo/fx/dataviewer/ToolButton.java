@@ -43,7 +43,7 @@ import javafx.scene.paint.Color;
 @DefaultProperty("children")
 public class ToolButton extends Region implements Toggle {
     public enum Tool {
-        NONE("none"), SELECT("select"), PAN("pan"), ZOOM("zoom");
+        NONE("none"), SELECT("select"), PAN("pan"), ZOOM("zoom"), ZOOM_IN("zoom-in"), ZOOM_OUT("zoom-out");
 
         public String id;
 
@@ -65,6 +65,8 @@ public class ToolButton extends Region implements Toggle {
     private              double                      width;
     private              double                      height;
     private              Pane                        pane;
+    private              boolean                     _canToggle;
+    private              BooleanProperty             canToggle;
     private              Tooltip                     tooltip;
     private              String                      _tooltipText;
     private              StringProperty              tooltipText;
@@ -86,20 +88,24 @@ public class ToolButton extends Region implements Toggle {
 
     // ******************** Constructors **************************************
     public ToolButton() {
-        this(Tool.NONE, null, "");
+        this(Tool.NONE, null, "", true);
     }
     public ToolButton(final Tool TOOL) {
-        this(TOOL, null, "");
+        this(TOOL, null, "", true);
     }
     public ToolButton(final Tool TOOL, final ToggleGroup TOGGLE_GROUP) {
-        this(TOOL, TOGGLE_GROUP, "");
+        this(TOOL, TOGGLE_GROUP, "", true);
     }
     public ToolButton(final Tool TOOL, final ToggleGroup TOGGLE_GROUP, final String TOOL_TIP_TEXT) {
+        this(TOOL, TOGGLE_GROUP, TOOL_TIP_TEXT, true);
+    }
+    public ToolButton(final Tool TOOL, final ToggleGroup TOGGLE_GROUP, final String TOOL_TIP_TEXT, final boolean CAN_TOGGLE) {
         getStylesheets().add(ToolButton.class.getResource("tool-button.css").toExternalForm());
         size                     = PREFERRED_WIDTH;
         width                    = PREFERRED_WIDTH;
         height                   = PREFERRED_HEIGHT;
         tooltip                  = new Tooltip(TOOL_TIP_TEXT);
+        _canToggle               = CAN_TOGGLE;
         _tooltipText             = TOOL_TIP_TEXT;
         _toggleGroup             = TOGGLE_GROUP;
         _selected                = false;
@@ -138,6 +144,7 @@ public class ToolButton extends Region implements Toggle {
         widthProperty().addListener(o -> resize());
         heightProperty().addListener(o -> resize());
         pane.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> setSelected(!isSelected()));
+        pane.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> { if (!getCanToggle()) { setSelected(!isSelected()); } });
         pane.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> hover(e));
         pane.addEventHandler(MouseEvent.MOUSE_EXITED, e -> hover(e));
     }
@@ -156,6 +163,24 @@ public class ToolButton extends Region implements Toggle {
     @Override protected double computeMaxHeight(final double WIDTH) { return MAXIMUM_HEIGHT; }
 
     @Override public ObservableList<Node> getChildren() { return super.getChildren(); }
+
+    public boolean getCanToggle() { return null == canToggle ? _canToggle : canToggle.get(); }
+    public void setCanToggle(final boolean CAN) {
+        if (null == canToggle) {
+            _canToggle = CAN;
+        } else {
+            canToggle.set(CAN);
+        }
+    }
+    public BooleanProperty canToggleProperty() {
+        if (null == canToggle) {
+            canToggle = new BooleanPropertyBase(_canToggle) {
+                @Override public Object getBean() { return ToolButton.this; }
+                @Override public String getName() { return "canToggle"; }
+            };
+        }
+        return canToggle;
+    }
 
     public String getTooltipText() { return null == tooltipText ? _tooltipText : tooltipText.get(); }
     public void setTooltipText(final String TEXT) {

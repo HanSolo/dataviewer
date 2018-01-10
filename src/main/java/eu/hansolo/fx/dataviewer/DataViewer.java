@@ -16,7 +16,7 @@
 
 package eu.hansolo.fx.dataviewer;
 
-import eu.hansolo.fx.dataviewer.Series.Symbol;
+import eu.hansolo.fx.dataviewer.Overlay.Symbol;
 import eu.hansolo.fx.dataviewer.ToolButton.Tool;
 import eu.hansolo.fx.dataviewer.event.DataViewerEvent;
 import eu.hansolo.fx.dataviewer.event.DataViewerEvent.Type;
@@ -65,19 +65,20 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.util.Pair;
 
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
 @DefaultProperty("children")
 public class DataViewer extends Region {
+    public enum OverlayType {
+        LINE_CHART, AREA_CHART, CIRCLE, SQUARE, POLYGON
+    }
     private static final double                                         PREFERRED_WIDTH  = 1024;
     private static final double                                         PREFERRED_HEIGHT = 600;
     private static final double                                         MINIMUM_WIDTH    = 50;
@@ -89,6 +90,8 @@ public class DataViewer extends Region {
     private static final double                                         RIGHT            = 10;
     private static final double                                         BOTTOM           = 10;
     private static final double                                         LEFT             = 10;
+    private static final int                                            MIN_ZOOM_LEVEL   = 1;
+    private static final int                                            MAX_ZOOM_LEVEL   = 24;
     private              double                                         size;
     private              double                                         width;
     private              double                                         height;
@@ -100,19 +103,21 @@ public class DataViewer extends Region {
     private              CtxDimension                                   selectedArea;
     private              Rectangle                                      chartBackgroundRect;
     private              ImageView                                      imageView;
-    private              Canvas                                         canvasDataLayer;
-    private              GraphicsContext                                ctxDataLayer;
+    private              Canvas                                         canvasOverlays;
+    private              GraphicsContext                                ctxOverlays;
     private              Canvas                                         canvasGrid;
     private              GraphicsContext                                ctxGrid;
     private              ToggleGroup                                    toggleGroup;
     private              ToolButton                                     selectTool;
     private              ToolButton                                     panTool;
     private              ToolButton                                     zoomTool;
+    private              ToolButton                                     zoomInTool;
+    private              ToolButton                                     zoomOutTool;
     private              HBox                                           toolBox;
     private              Rectangle                                      selectionRect;
     private              Rectangle                                      overviewRect;
     private              Rectangle                                      viewportRect;
-    private              Text                                           infoText;
+    private              Text                                           coordinatesText;
     private              Axis                                           xAxis;
     private              Axis                                           yAxis;
     private              Pane                                           pane;
@@ -128,6 +133,12 @@ public class DataViewer extends Region {
     private              BooleanProperty                                panToolVisible;
     private              boolean                                        _zoomToolVisible;
     private              BooleanProperty                                zoomToolVisible;
+    private              boolean                                        _zoomInToolVisible;
+    private              BooleanProperty                                zoomInToolVisible;
+    private              boolean                                        _zoomOutToolVisible;
+    private              BooleanProperty                                zoomOutToolVisible;
+    private              boolean                                        _centerCrossVisible;
+    private              BooleanProperty                                centerCrossVisible;
     private              double                                         _xAxisMin;
     private              DoubleProperty                                 xAxisMin;
     private              double                                         _xAxisMax;
@@ -144,8 +155,8 @@ public class DataViewer extends Region {
     private              double                                         scaleY;
     private              Color                                          _backgroundColor;
     private              ObjectProperty<Color>                          backgroundColor;
-    private              Color                                          _infoTextColor;
-    private              ObjectProperty<Color>                          infoTextColor;
+    private              Color                                          _coordinatesTextColor;
+    private              ObjectProperty<Color>                          coordinatesTextColor;
     private              Color                                          _axisTextColor;
     private              ObjectProperty<Color>                          axisTextColor;
     private              Color                                          _axisColor;
@@ -154,6 +165,8 @@ public class DataViewer extends Region {
     private              ObjectProperty<Color>                          axisBackgroundColor;
     private              Color                                          _zoomColor;
     private              ObjectProperty<Color>                          zoomColor;
+    private              Color                                          _centerCrossColor;
+    private              ObjectProperty<Color>                          centerCrossColor;
     private              Color                                          _selectionColor;
     private              ObjectProperty<Color>                          selectionColor;
     private              Color                                          _overviewRectColor;
@@ -174,6 +187,8 @@ public class DataViewer extends Region {
     private              IntegerProperty                                yAxisDecimals;
     private              String                                         formatString;
     private              EventHandler<MouseEvent>                       mouseHandler;
+    private              EventHandler<MouseEvent>                       zoomInHandler;
+    private              EventHandler<MouseEvent>                       zoomOutHandler;
     private              boolean                                        panSelection;
     private              double                                         selectionStartX;
     private              double                                         selectionStartY;
@@ -185,6 +200,11 @@ public class DataViewer extends Region {
     private              double                                         zoomStartY;
     private              double                                         zoomFactorX;
     private              double                                         zoomFactorY;
+    private              int                                            zoomLevel;
+    private              double                                         zoomLevelX;
+    private              double                                         zoomLevelY;
+    private              double                                         zoomStepX;
+    private              double                                         zoomStepY;
     private              double                                         initialMinX;
     private              double                                         initialMaxX;
     private              double                                         initialMinY;
@@ -193,9 +213,9 @@ public class DataViewer extends Region {
     private              double                                         initialRangeY;
     private              double                                         initialImageWidth;
     private              double                                         initialImageHeight;
-    private              List<Series>                                   series;
-    private              boolean                                        _dataLayerVisible;
-    private              BooleanProperty                                dataLayerVisible;
+    private              List<Overlay>                                  overlays;
+    private              boolean                                        _overlaysVisible;
+    private              BooleanProperty                                overlaysVisible;
     private              boolean                                        _adjustGridToData;
     private              BooleanProperty                                adjustGridToData;
     private              boolean                                         _crossHairVisible;
@@ -204,6 +224,8 @@ public class DataViewer extends Region {
     private              ObjectProperty<Color>                          crossHairColor;
     private              Line                                           crossHairHorizontal;
     private              Line                                           crossHairVertical;
+    private              Line                                           centerCrossHorizontal;
+    private              Line                                           centerCrossVertical;
     private              CopyOnWriteArrayList<DataViewerEventListener>  listeners;
     private              double                                         gridToImageScaleX;
     private              double                                         gridToImageScaleY;
@@ -235,12 +257,13 @@ public class DataViewer extends Region {
         _yAxisMin             = 0;
         _yAxisMax             = 100;
         _backgroundColor      = Color.TRANSPARENT;
-        _infoTextColor        = Color.LIGHTGRAY;
+        _coordinatesTextColor = Color.LIGHTGRAY;
         _axisTextColor        = Color.BLACK;
         _axisColor            = Color.BLACK;
         _axisBackgroundColor  = Color.TRANSPARENT;
         _zoomColor            = Color.rgb(255, 0, 255);
-        _selectionColor       = Color.rgb(0, 100, 200);
+        _centerCrossColor     = Color.rgb(255, 255, 255, 0.4);
+        _selectionColor       = Color.rgb(30, 49, 116);
         _overviewRectColor    = Color.rgb(200, 200, 200, 0.5);
         _chartBackgroundColor = Color.TRANSPARENT;
         _overviewVisible      = true;
@@ -254,15 +277,23 @@ public class DataViewer extends Region {
         formatString          = "%.0f";
         zoomFactorX           = 1.0;
         zoomFactorY           = 1.0;
+        zoomLevelX            = 1.0 / zoomFactorX;
+        zoomLevelY            = 1.0 / zoomFactorY;
+        zoomLevel             = zoomLevelX < zoomLevelY ? (int) zoomLevelX : (int) zoomLevelY;
+        zoomStepX             = 0.1;
+        zoomStepY             = 0.1;
         initialImageWidth     = -1;
         initialImageHeight    = -1;
-        series                = new LinkedList<>();
-        _dataLayerVisible     = true;
+        overlays              = new LinkedList<>();
+        _overlaysVisible      = true;
         _toolboxVisible       = true;
         _toolboxPosition      = Pos.TOP_RIGHT;
         _selectToolVisible    = true;
         _panToolVisible       = true;
         _zoomToolVisible      = true;
+        _zoomInToolVisible    = true;
+        _zoomOutToolVisible   = true;
+        _centerCrossVisible   = false;
         _adjustGridToData     = false;
         _crossHairVisible     = false;
         _crossHairColor       = Color.rgb(128, 128, 128, 0.5);
@@ -272,14 +303,14 @@ public class DataViewer extends Region {
         _yAxisPosition        = Position.LEFT;
         listeners             = new CopyOnWriteArrayList<>();
 
-        mouseHandler = e -> {
+        mouseHandler   = e -> {
             double    x         = e.getX();
             double    y         = e.getY();
             double    valueX    = (x * scaleX) + xAxis.getMinValue();
             double    valueY    = ((chartArea.getHeight() - y) * scaleY) + yAxis.getMinValue();
             String    text      = String.format(getLocale(), formatString, valueX) + ", " + String.format(getLocale(), formatString, valueY);
-            infoText.setText(text);
-            double    textWidth = infoText.getLayoutBounds().getWidth();
+            coordinatesText.setText(text);
+            double    textWidth = coordinatesText.getLayoutBounds().getWidth();
             double    textX;
             double    textY;
             double    xInWindow;
@@ -320,6 +351,8 @@ public class DataViewer extends Region {
                 }
             }
         };
+        zoomInHandler  = e -> setZoomLevel(zoomLevel == 1 ? (zoomLevel + 1) : (zoomLevel + 2));
+        zoomOutHandler = e -> setZoomLevel(zoomLevel - 2);
 
         initGraphics();
         registerListeners();
@@ -367,8 +400,8 @@ public class DataViewer extends Region {
         canvasGrid.setMouseTransparent(true);
         ctxGrid = canvasGrid.getGraphicsContext2D();
 
-        canvasDataLayer = new Canvas(chartArea.getWidth(), chartArea.getHeight());
-        ctxDataLayer    = canvasDataLayer.getGraphicsContext2D();
+        canvasOverlays = new Canvas(chartArea.getWidth(), chartArea.getHeight());
+        ctxOverlays    = canvasOverlays.getGraphicsContext2D();
 
         crossHairHorizontal = new Line();
         crossHairHorizontal.setStroke(getCrossHairColor());
@@ -380,20 +413,31 @@ public class DataViewer extends Region {
         selectTool  = new ToolButton(Tool.SELECT, toggleGroup, "Select area");
         panTool     = new ToolButton(Tool.PAN, toggleGroup, "Pan zoomed area");
         zoomTool    = new ToolButton(Tool.ZOOM, toggleGroup, "Zoom to area");
+        zoomInTool  = new ToolButton(Tool.ZOOM_IN, toggleGroup, "Zoom in 2x", false);
+        zoomOutTool = new ToolButton(Tool.ZOOM_OUT, toggleGroup, "Zoom out 2x", false);
 
-        toolBox = new HBox(5, selectTool, panTool, zoomTool);
+        toolBox = new HBox(5, selectTool, panTool, zoomTool, zoomInTool, zoomOutTool);
         toolBox.relocate(PREFERRED_WIDTH - RIGHT - 10 - 94, 10 + TOP);
 
-        infoText  = new Text("");
-        infoText.setFont(Fonts.latoLight(12));
-        infoText.setFill(getInfoTextColor());
-        infoText.setTextAlignment(TextAlignment.CENTER);
-        infoText.setTextOrigin(VPos.CENTER);
+        coordinatesText = new Text("");
+        coordinatesText.setFont(Fonts.latoLight(12));
+        coordinatesText.setFill(getCoordinatesTextColor());
+        coordinatesText.setTextAlignment(TextAlignment.CENTER);
+        coordinatesText.setTextOrigin(VPos.CENTER);
 
         selectionRect = new Rectangle(0, 0, 0, 0);
         selectionRect.setMouseTransparent(true);
 
-        pane = new Pane(xAxis, yAxis, chartBackgroundRect, imageView, canvasGrid, crossHairHorizontal, crossHairVertical, overviewRect, viewportRect, canvasDataLayer, selectionRect, toolBox, infoText);
+        centerCrossHorizontal = new Line();
+        centerCrossHorizontal.setStroke(getCenterCrossColor());
+        centerCrossHorizontal.setVisible(false);
+
+        centerCrossVertical   = new Line();
+        centerCrossVertical.setStroke(getCenterCrossColor());
+        centerCrossVertical.setVisible(false);
+
+        pane = new Pane(xAxis, yAxis, chartBackgroundRect, imageView, canvasGrid, crossHairHorizontal, crossHairVertical, overviewRect, viewportRect, canvasOverlays, selectionRect, toolBox,
+                        coordinatesText, centerCrossHorizontal, centerCrossVertical);
 
         getChildren().setAll(pane);
     }
@@ -401,12 +445,14 @@ public class DataViewer extends Region {
     private void registerListeners() {
         widthProperty().addListener(o -> resize());
         heightProperty().addListener(o -> resize());
-        canvasDataLayer.addEventHandler(MouseEvent.MOUSE_MOVED, mouseHandler);
-        canvasDataLayer.addEventHandler(MouseEvent.MOUSE_ENTERED, mouseHandler);
-        canvasDataLayer.addEventHandler(MouseEvent.MOUSE_EXITED, mouseHandler);
-        canvasDataLayer.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseHandler);
-        canvasDataLayer.addEventHandler(MouseEvent.MOUSE_DRAGGED, mouseHandler);
-        canvasDataLayer.addEventHandler(MouseEvent.MOUSE_RELEASED, mouseHandler);
+        canvasOverlays.addEventHandler(MouseEvent.MOUSE_MOVED, mouseHandler);
+        canvasOverlays.addEventHandler(MouseEvent.MOUSE_ENTERED, mouseHandler);
+        canvasOverlays.addEventHandler(MouseEvent.MOUSE_EXITED, mouseHandler);
+        canvasOverlays.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseHandler);
+        canvasOverlays.addEventHandler(MouseEvent.MOUSE_DRAGGED, mouseHandler);
+        canvasOverlays.addEventHandler(MouseEvent.MOUSE_RELEASED, mouseHandler);
+        zoomInTool.addEventHandler(MouseEvent.MOUSE_PRESSED, zoomInHandler);
+        zoomOutTool.addEventHandler(MouseEvent.MOUSE_PRESSED, zoomOutHandler);
 
         // Resize once the control is shown on the screen to apply
         // settings that have been modified before the control was visible
@@ -527,6 +573,35 @@ public class DataViewer extends Region {
         return selectToolVisible;
     }
 
+    public void setToolboxItemBackgroundColor(final Color COLOR) {
+        selectTool.setBackgroundColor(COLOR);
+        panTool.setBackgroundColor(COLOR);
+        zoomTool.setBackgroundColor(COLOR);
+        zoomInTool.setBackgroundColor(COLOR);
+        zoomOutTool.setBackgroundColor(COLOR);
+    }
+    public void setToolboxItemColor(final Color COLOR) {
+        selectTool.setFillColor(COLOR);
+        panTool.setFillColor(COLOR);
+        zoomTool.setFillColor(COLOR);
+        zoomInTool.setFillColor(COLOR);
+        zoomOutTool.setFillColor(COLOR);
+    }
+    public void setToolboxSelectedItemBackgroundColor(final Color COLOR) {
+        selectTool.setSelectedBackgroundColor(COLOR);
+        panTool.setSelectedBackgroundColor(COLOR);
+        zoomTool.setSelectedBackgroundColor(COLOR);
+        zoomInTool.setSelectedBackgroundColor(COLOR);
+        zoomOutTool.setSelectedBackgroundColor(COLOR);
+    }
+    public void setToolboxSelectedItemColor(final Color COLOR) {
+        selectTool.setSelectedColor(COLOR);
+        panTool.setSelectedColor(COLOR);
+        zoomTool.setSelectedColor(COLOR);
+        zoomInTool.setSelectedColor(COLOR);
+        zoomOutTool.setSelectedColor(COLOR);
+    }
+
     public boolean isPanToolVisible() { return null == panToolVisible ? _panToolVisible : panToolVisible.get(); }
     public void setPanToolVisible(final boolean VISIBLE) {
         if (null == panToolVisible) {
@@ -573,6 +648,103 @@ public class DataViewer extends Region {
             };
         }
         return zoomToolVisible;
+    }
+
+    public boolean isZoomOutToolVisible() { return null == zoomOutToolVisible ? _zoomOutToolVisible : zoomOutToolVisible.get(); }
+    public void setZoomOutToolVisible(final boolean VISIBLE) {
+        if (null == zoomOutToolVisible) {
+            _zoomOutToolVisible = VISIBLE;
+            Helper.enableNode(zoomOutTool, VISIBLE);
+            resize();
+        } else {
+            zoomOutToolVisible.set(VISIBLE);
+        }
+    }
+    public BooleanProperty zoomOutToolVisibleProperty() {
+        if (null == zoomOutToolVisible) {
+            zoomOutToolVisible = new BooleanPropertyBase(_zoomOutToolVisible) {
+                @Override protected void invalidated() {
+                    Helper.enableNode(zoomOutTool, get());
+                    resize();
+                }
+                @Override public Object getBean() { return DataViewer.this; }
+                @Override public String getName() { return "zoomOutToolVisible"; }
+            };
+        }
+        return zoomOutToolVisible;
+    }
+
+    public boolean isZoomInToolVisible() { return null == zoomInToolVisible ? _zoomInToolVisible : zoomInToolVisible.get(); }
+    public void setZoomInToolVisible(final boolean VISIBLE) {
+        if (null == zoomInToolVisible) {
+            _zoomInToolVisible = VISIBLE;
+            Helper.enableNode(zoomInTool, VISIBLE);
+            resize();
+        } else {
+            zoomInToolVisible.set(VISIBLE);
+        }
+    }
+    public BooleanProperty zoomInToolVisibleProperty() {
+        if (null == zoomInToolVisible) {
+            zoomInToolVisible = new BooleanPropertyBase(_zoomInToolVisible) {
+                @Override protected void invalidated() {
+                    Helper.enableNode(zoomInTool, get());
+                    resize();
+                }
+                @Override public Object getBean() { return DataViewer.this; }
+                @Override public String getName() { return "zoomInToolVisible"; }
+            };
+        }
+        return zoomInToolVisible;
+    }
+
+    public boolean isCenterCrossVisible() { return null == centerCrossVisible ? _centerCrossVisible : centerCrossVisible.get(); }
+    public void setCenterCrossVisible(final boolean VISIBLE) {
+        if (null == centerCrossVisible) {
+            _centerCrossVisible = VISIBLE;
+            centerCrossHorizontal.setVisible(VISIBLE);
+            centerCrossVertical.setVisible(VISIBLE);
+            redraw();
+        } else {
+            centerCrossVisible.set(VISIBLE);
+        }
+    }
+    public BooleanProperty centerCrossVisibleProperty() {
+        if (null == centerCrossVisible) {
+            centerCrossVisible = new BooleanPropertyBase(_centerCrossVisible) {
+                @Override protected void invalidated() {
+                    centerCrossHorizontal.setVisible(get());
+                    centerCrossVertical.setVisible(get());
+                    redraw();
+                }
+                @Override public Object getBean() { return DataViewer.this; }
+                @Override public String getName() { return "centerCrossVisible"; }
+            };
+        }
+        return centerCrossVisible;
+    }
+
+    public Color getCenterCrossColor() { return null == centerCrossColor ? _centerCrossColor : centerCrossColor.get(); }
+    public void setCenterCrossColor(final Color COLOR) {
+        if (null == centerCrossColor) {
+            _centerCrossColor = COLOR;
+            centerCrossHorizontal.setStroke(COLOR);
+            centerCrossVertical.setStroke(COLOR);
+        }
+    }
+    public ObjectProperty<Color> centerCrossColorProperty() {
+        if (null == centerCrossColor) {
+            centerCrossColor = new ObjectPropertyBase<Color>(_centerCrossColor) {
+                @Override protected void invalidated() {
+                    centerCrossHorizontal.setStroke(get());
+                    centerCrossVertical.setStroke(get());
+                }
+                @Override public Object getBean() { return DataViewer.this; }
+                @Override public String getName() { return "centerCrossColor"; }
+            };
+            _centerCrossColor = null;
+        }
+        return centerCrossColor;
     }
 
     public double getXAxisMin() { return null == xAxisMin ? _xAxisMin : xAxisMin.get(); }
@@ -704,25 +876,25 @@ public class DataViewer extends Region {
         return backgroundColor;
     }
 
-    public Color getInfoTextColor() { return null == infoTextColor ? _infoTextColor : infoTextColor.get(); }
-    public void setInfoTextColor(final Color COLOR) {
-        if (null == infoTextColor) {
-            _infoTextColor = COLOR;
-            infoText.setFill(COLOR);
+    public Color getCoordinatesTextColor() { return null == coordinatesTextColor ? _coordinatesTextColor : coordinatesTextColor.get(); }
+    public void setCoordinatesTextColor(final Color COLOR) {
+        if (null == coordinatesTextColor) {
+            _coordinatesTextColor = COLOR;
+            coordinatesText.setFill(COLOR);
         } else {
-            infoTextColor.set(COLOR);
+            coordinatesTextColor.set(COLOR);
         }
     }
-    public ObjectProperty<Color> infoTextColorProperty() {
-        if (null == infoTextColor) {
-            infoTextColor = new ObjectPropertyBase<Color>(_infoTextColor) {
-                @Override protected void invalidated() { infoText.setFill(get()); }
+    public ObjectProperty<Color> coordinatesTextColorProperty() {
+        if (null == coordinatesTextColor) {
+            coordinatesTextColor = new ObjectPropertyBase<Color>(_coordinatesTextColor) {
+                @Override protected void invalidated() { coordinatesText.setFill(get()); }
                 @Override public Object getBean() { return DataViewer.this; }
-                @Override public String getName() { return "infoTextColor"; }
+                @Override public String getName() { return "coordinatesTextColor"; }
             };
-            _infoTextColor = null;
+            _coordinatesTextColor = null;
         }
-        return infoTextColor;
+        return coordinatesTextColor;
     }
 
     public Color getAxisTextColor() { return null == axisTextColor ? _axisTextColor : axisTextColor.get(); }
@@ -1045,50 +1217,45 @@ public class DataViewer extends Region {
         return yAxisLabel;
     }
 
-    public List<Series> getSeries() { return series; }
-    public void setSeries(final Series... SERIES) { setSeries(Arrays.asList(SERIES)); }
-    public void setSeries(final List<Series> SERIES) {
-        series = SERIES;
-        if (seriesAreTimeBased()) {
-            xAxis.setTickLabelFormat(TickLabelFormat.TIME);
-            xAxis.resize();
-        }
+    public List<Overlay> getOverlays() { return overlays; }
+    public void setOverlays(final Overlay... OVERLAYS) { setOverlays(Arrays.asList(OVERLAYS)); }
+    public void setOverlays(final List<Overlay> OVERLAYS) {
+        overlays.clear();
+        OVERLAYS.forEach(overlay -> overlays.add(overlay));
+        adjustToTimeBasedOverlays();
         redraw();
     }
-    public void addSeries(final Series SERIES) {
-        if (series.contains(SERIES)) return;
-        series.add(SERIES);
-        if (seriesAreTimeBased()) {
-            xAxis.setTickLabelFormat(TickLabelFormat.TIME);
-            xAxis.resize();
-        };
+    public void addOverlay(final Overlay OVERLAY) {
+        if (overlays.contains(OVERLAY)) return;
+        overlays.add(OVERLAY);
+        adjustToTimeBasedOverlays();
         redraw();
     }
-    public void removeSeries(final Series SERIES) {
-        if (series.contains(SERIES)) {
-            series.remove(SERIES);
+    public void removeOverlay(final Overlay OVERLAY) {
+        if (overlays.contains(OVERLAY)) {
+            overlays.remove(OVERLAY);
             redraw();
         }
     }
 
-    public boolean isDataLayerVisible() { return null == dataLayerVisible ? _dataLayerVisible : dataLayerVisible.get(); }
-    public void setDataLayerVisible(final boolean VISIBLE) {
-        if (null == dataLayerVisible) {
-            _dataLayerVisible = VISIBLE;
-            canvasDataLayer.setVisible(VISIBLE);
+    public boolean isOverlaysVisible() { return null == overlaysVisible ? _overlaysVisible : overlaysVisible.get(); }
+    public void setOverlaysVisible(final boolean VISIBLE) {
+        if (null == overlaysVisible) {
+            _overlaysVisible = VISIBLE;
+            canvasOverlays.setVisible(VISIBLE);
         } else {
-            dataLayerVisible.set(VISIBLE);
+            overlaysVisible.set(VISIBLE);
         }
     }
-    public BooleanProperty dataLayerVisibleProperty() {
-        if (null == dataLayerVisible) {
-            dataLayerVisible = new BooleanPropertyBase(_dataLayerVisible) {
-                @Override protected void invalidated() { canvasDataLayer.setVisible(get()); }
+    public BooleanProperty overlaysVisibleProperty() {
+        if (null == overlaysVisible) {
+            overlaysVisible = new BooleanPropertyBase(_overlaysVisible) {
+                @Override protected void invalidated() { canvasOverlays.setVisible(get()); }
                 @Override public Object getBean() { return DataViewer.this; }
-                @Override public String getName() { return "dataLayerVisible"; }
+                @Override public String getName() { return "overlaysVisible"; }
             };
         }
-        return dataLayerVisible;
+        return overlaysVisible;
     }
 
     public boolean getAdjustGridToData() { return null == adjustGridToData ? _adjustGridToData : adjustGridToData.get(); }
@@ -1278,6 +1445,41 @@ public class DataViewer extends Region {
         return yAxisPosition;
     }
 
+    public void setZoomLevel(final int ZOOM_LEVEL) {
+        boolean zoomOut = ZOOM_LEVEL < zoomLevel;
+
+        //zoomLevel = ZOOM_LEVEL % 2 == 0 ? ZOOM_LEVEL : zoomOut ? ZOOM_LEVEL - 1 : ZOOM_LEVEL + 1;
+        zoomLevel = Helper.clamp(MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL, ZOOM_LEVEL);
+
+        if (MIN_ZOOM_LEVEL == zoomLevel && zoomOut) {
+            zoomLevelX  = 1.0;
+            zoomLevelY  = 1.0;
+            zoomFactorX = 1.0;
+            zoomFactorY = 1.0;
+            setZoom(new CtxDimension(initialMinX, initialMaxX, initialMinY, initialMaxY));
+        } else if (MAX_ZOOM_LEVEL == zoomLevel && !zoomOut) {
+            return;
+        } else {
+
+            zoomLevelX = zoomLevel * zoomStepX;
+            zoomLevelY = zoomLevel * zoomStepY;
+
+            zoomFactorX = 1.0 / zoomLevelX;
+            zoomFactorY = 1.0 / zoomLevelY;
+
+            double       centerX = xAxis.getMinValue() + xAxis.getRange() * 0.5;
+            double       centerY = yAxis.getMinValue() + yAxis.getRange() * 0.5;
+            double       width   = zoomOut ? xAxis.getRange() + (xAxis.getMajorTickSpace() * zoomLevelX) : xAxis.getRange() - (xAxis.getMajorTickSpace() * zoomLevelX);
+            double       height  = zoomOut ? yAxis.getRange() + (yAxis.getMajorTickSpace() * zoomLevelY) : yAxis.getRange() - (yAxis.getMajorTickSpace() * zoomLevelY);
+            CtxDimension dim     = new CtxDimension();
+            dim.setMinX(centerX - width * 0.5);
+            dim.setMaxX(centerX + height * 0.5);
+            dim.setMinY(centerY - height * 0.5);
+            dim.setMaxY(centerY + height * 0.5);
+
+            setZoom(dim);
+        }
+    }
     public void setZoom(final DataViewerEvent EVENT) {
         setZoom(EVENT.getDimension());
     }
@@ -1316,7 +1518,7 @@ public class DataViewer extends Region {
 
         drawOverview();
 
-        drawDataLayer();
+        drawOverlays();
 
         // Reset rectangle
         selectionRect.setStroke(Color.TRANSPARENT);
@@ -1350,7 +1552,7 @@ public class DataViewer extends Region {
         Scene scene = getScene();
         if (null == scene) return;
         scene.setCursor(Cursor.CROSSHAIR);
-        infoText.setVisible(true);
+        coordinatesText.setVisible(true);
     }
     private void mousePressed(final double X, final double Y, final double X_IN_WINDOW, final double Y_IN_WINDOW) {
         Toggle selectedButton = toggleGroup.getSelectedToggle();
@@ -1371,18 +1573,18 @@ public class DataViewer extends Region {
         } else if (zoomTool.equals(selectedButton)) {
             dragZoom(X, Y);
         }
-        infoText.relocate(TEXT_X, TEXT_Y);
+        coordinatesText.relocate(TEXT_X, TEXT_Y);
         if (isCrossHairVisible()) { drawCrossHair(X, Y); }
     }
     private void mouseMoved(final double X, final double Y, final double TEXT_X, final double TEXT_Y) {
-        infoText.relocate(TEXT_X, TEXT_Y);
+        coordinatesText.relocate(TEXT_X, TEXT_Y);
         if (isCrossHairVisible()) { drawCrossHair(X, Y); }
     }
     private void mouseExited(final double X, final double Y) {
         Scene scene = getScene();
         if (null == scene) return;
         scene.setCursor(Cursor.DEFAULT);
-        infoText.setVisible(false);
+        coordinatesText.setVisible(false);
     }
 
     private void startSelection(final double X, final double Y, final double X_IN_WINDOW, final double Y_IN_WINDOW) {
@@ -1560,17 +1762,17 @@ public class DataViewer extends Region {
 
     private void adjustToData() {
         if (getAdjustGridToData()) {
-            double minX = Double.MAX_VALUE;
-            double maxX = -Double.MAX_VALUE;
-            double minY = Double.MAX_VALUE;
-            double maxY = -Double.MAX_VALUE;
-            int length = series.size();
+            double minX   = Double.MAX_VALUE;
+            double maxX   = -Double.MAX_VALUE;
+            double minY   = Double.MAX_VALUE;
+            double maxY   = -Double.MAX_VALUE;
+            int    length = overlays.size();
             for (int i = 0 ; i < length ; i++) {
-                Series s = series.get(i);
-                minX = Math.min(minX, s.getData().entrySet().stream().mapToDouble(Entry::getKey).min().getAsDouble());
-                maxX = Math.max(maxX, s.getData().entrySet().stream().mapToDouble(Entry::getKey).max().getAsDouble());
-                minY = Math.min(minY, s.getData().entrySet().stream().mapToDouble(Entry::getValue).min().getAsDouble());
-                maxY = Math.max(maxY, s.getData().entrySet().stream().mapToDouble(Entry::getValue).max().getAsDouble());
+                Overlay o = overlays.get(i);
+                minX = Math.min(minX, o.getPoints().stream().mapToDouble(Pair::getKey).min().getAsDouble());
+                maxX = Math.max(maxX, o.getPoints().stream().mapToDouble(Pair::getKey).max().getAsDouble());
+                minY = Math.min(minY, o.getPoints().stream().mapToDouble(Pair::getValue).min().getAsDouble());
+                maxY = Math.max(maxY, o.getPoints().stream().mapToDouble(Pair::getValue).max().getAsDouble());
             }
             setXAxisMin(minX);
             setXAxisMax(maxX);
@@ -1585,8 +1787,16 @@ public class DataViewer extends Region {
         }
     }
 
-    private boolean seriesAreTimeBased() {
-        return (series.stream().filter(s -> s.isTimeBased()).count()) == series.size();
+    private boolean adjustToTimeBasedOverlays() {
+        boolean allOverlaysTimeBased = (overlays.stream().filter(overlay -> overlay.isTimeBased()).count()) == overlays.size();
+        if (allOverlaysTimeBased) {
+            xAxis.setTickLabelFormat(TickLabelFormat.TIME);
+            xAxis.resize();
+        } else {
+            xAxis.setTickLabelFormat(TickLabelFormat.NUMBER);
+            xAxis.resize();
+        }
+        return allOverlaysTimeBased;
     }
 
     private void assureCorrectGridViewPort() {
@@ -1601,6 +1811,9 @@ public class DataViewer extends Region {
     private void assureCorrectZoomFactors() {
         if (Double.isInfinite(zoomFactorX) || Double.compare(Math.abs(zoomFactorX), 0) == 0) { zoomFactorX = 1; }
         if (Double.isInfinite(zoomFactorY) || Double.compare(Math.abs(zoomFactorY), 0) == 0) { zoomFactorY = 1; }
+        //zoomLevelX = 1.0 / zoomFactorX;
+        //zoomLevelY = 1.0 / zoomFactorY;
+        //zoomLevel  = zoomLevelX < zoomLevelY ? (int) zoomLevelX : (int) zoomLevelY;
     }
 
     private void recalc() {
@@ -1610,13 +1823,16 @@ public class DataViewer extends Region {
         initialRangeY     = initialMaxY - initialMinY;
         gridToImageScaleX = initialImageWidth / initialRangeX;
         gridToImageScaleY = initialImageHeight / initialRangeY;
+        zoomStepX         = initialRangeX / MAX_ZOOM_LEVEL;
+        zoomStepY         = initialRangeY / MAX_ZOOM_LEVEL;
     }
 
 
     // ******************** Drawing *******************************************
     private void redraw() {
         if (isGridVisible()) { drawGrid(); }
-        if (isDataLayerVisible()) { drawDataLayer(); }
+        if (isOverlaysVisible()) { drawOverlays(); }
+        if (isCenterCrossVisible()) { drawCenterCross(); }
     }
 
     private void drawBackground() {
@@ -1664,7 +1880,7 @@ public class DataViewer extends Region {
 
     }
 
-    private void drawDataLayer() {
+    private void drawOverlays() {
         double chartWidth  = chartArea.getWidth();
         double chartHeight = chartArea.getHeight();
         double symbolSize  = chartHeight * 0.019;
@@ -1675,72 +1891,85 @@ public class DataViewer extends Region {
         double stepX       = chartWidth / xAxis.getRange();
         double stepY       = chartHeight / yAxis.getRange();
 
-        ctxDataLayer.clearRect(0, 0, chartWidth, chartHeight);
-        ctxDataLayer.save();
-        series.forEach(series -> {
-            // Filter visible values and draw them
-            LinkedHashMap<Double, Double> visibleData = new LinkedHashMap<>();
-            series.getData()
-                  .entrySet()
-                  .stream()
-                  //.filter(entry -> Double.compare(entry.getKey(), minX) >= 0 && Double.compare(entry.getKey(), maxX) <= 0)
-                  //.filter(entry -> Double.compare(entry.getValue(), minY) >= 0 && Double.compare(entry.getValue(), maxY) <= 0)
-                  .sorted(Map.Entry.comparingByKey())
-                  .forEachOrdered(c -> visibleData.put(c.getKey(), c.getValue()));
+        ctxOverlays.clearRect(0, 0, chartWidth, chartHeight);
+        overlays.forEach(overlay -> {
+            List<Pair<Double, Double>> points     = overlay.getPoints();
+            int                        noOfPoints = points.size();
+            Symbol                     symbol     = overlay.getSymbol();
+            boolean                    doFill     = overlay.isDoFill();
+            boolean                    doStroke   = overlay.isDoStroke();
+            double                     x          = (points.get(0).getKey() - minX) * stepX;
+            double                     y          = chartHeight - (points.get(0).getValue() - minY) * stepY;
+            Pair<Double,Double>        point;
 
-            Symbol  symbol      = series.getSymbol();
-            boolean connected   = series.isConnected();
-            double  lastX       = -Double.MAX_VALUE;
-            double  lastY       = -Double.MAX_VALUE;
-            ctxDataLayer.setStroke(series.getColor());
-            ctxDataLayer.setFill(series.getColor());
-            for (Entry<Double, Double> entry : visibleData.entrySet()) {
-                double x = (entry.getKey() - minX) * stepX;
-                double y = chartHeight - (entry.getValue() - minY) * stepY;
-                drawSymbol(x, y, symbol, symbolSize);
-                if (connected && lastX > -Double.MAX_VALUE && lastY > -Double.MAX_VALUE) {
-                    ctxDataLayer.strokeLine(lastX, lastY, x, y);
+            ctxOverlays.beginPath();
+            ctxOverlays.moveTo(x, y);
+            for (int i = 1 ; i < noOfPoints  ;i++) {
+                point = points.get(i);
+                x = (point.getKey() - minX) * stepX;
+                y = chartHeight - (point.getValue() - minY) * stepY;
+                if (doFill || doStroke) {
+                    ctxOverlays.lineTo(x, y);
                 }
-                lastX = x;
-                lastY = y;
+            }
+            if (doFill) {
+                ctxOverlays.setFill(overlay.getFill());
+                ctxOverlays.closePath();
+                ctxOverlays.fill();
+            }
+            if (doStroke) {
+                ctxOverlays.setStroke(overlay.getStroke());
+                ctxOverlays.stroke();
+            }
+
+            // Draw symbols
+            if (overlay.isSymbolsVisible()) {
+                for (int i = 0; i < noOfPoints; i++) {
+                    point = points.get(i);
+                    x     = (point.getKey() - minX) * stepX;
+                    y     = chartHeight - (point.getValue() - minY) * stepY;
+
+                    ctxOverlays.setStroke(overlay.getSymbolColor());
+                    ctxOverlays.setFill(overlay.getSymbolColor());
+                    drawSymbol(x, y, symbol, symbolSize);
+                }
             }
         });
-        ctxDataLayer.restore();
     }
 
     private void drawSymbol(final double X, final double Y, final Symbol SYMBOL, final double SYMBOL_SIZE) {
         double halfSymbolSize = SYMBOL_SIZE * 0.5;
         switch(SYMBOL) {
             case CIRCLE:
-                ctxDataLayer.strokeOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+                ctxOverlays.strokeOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
                 break;
             case SQUARE:
-                ctxDataLayer.strokeRect(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+                ctxOverlays.strokeRect(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
                 break;
             case TRIANGLE:
-                ctxDataLayer.strokeLine(X, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);
-                ctxDataLayer.strokeLine(X + halfSymbolSize, Y + halfSymbolSize, X - halfSymbolSize, Y + halfSymbolSize);
-                ctxDataLayer.strokeLine(X - halfSymbolSize, Y + halfSymbolSize, X, Y - halfSymbolSize);
+                ctxOverlays.strokeLine(X, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.strokeLine(X + halfSymbolSize, Y + halfSymbolSize, X - halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.strokeLine(X - halfSymbolSize, Y + halfSymbolSize, X, Y - halfSymbolSize);
                 break;
             case CROSS:
-                ctxDataLayer.strokeLine(X - halfSymbolSize, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);
-                ctxDataLayer.strokeLine(X - halfSymbolSize, Y + halfSymbolSize, X + halfSymbolSize, Y - halfSymbolSize);
+                ctxOverlays.strokeLine(X - halfSymbolSize, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.strokeLine(X - halfSymbolSize, Y + halfSymbolSize, X + halfSymbolSize, Y - halfSymbolSize);
                 break;
             case FILLED_CIRCLE:
-                ctxDataLayer.fillOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+                ctxOverlays.fillOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
                 break;
             case FILLED_SQUARE:
-                ctxDataLayer.fillRect(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+                ctxOverlays.fillRect(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
                 break;
             case FILLED_TRIANGLE: // Slower than the others!!!
-                ctxDataLayer.beginPath();
-                ctxDataLayer.moveTo(X, Y - halfSymbolSize);
-                ctxDataLayer.lineTo(X + halfSymbolSize, Y + halfSymbolSize);
-                ctxDataLayer.lineTo(X + halfSymbolSize, Y + halfSymbolSize);
-                ctxDataLayer.lineTo(X - halfSymbolSize, Y + halfSymbolSize);
-                ctxDataLayer.lineTo(X - halfSymbolSize, Y + halfSymbolSize);
-                ctxDataLayer.closePath();
-                ctxDataLayer.fill();
+                ctxOverlays.beginPath();
+                ctxOverlays.moveTo(X, Y - halfSymbolSize);
+                ctxOverlays.lineTo(X + halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.lineTo(X + halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.lineTo(X - halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.lineTo(X - halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.closePath();
+                ctxOverlays.fill();
                 break;
             case NONE:
             default  :
@@ -1770,6 +1999,50 @@ public class DataViewer extends Region {
             crossHairHorizontal.setStartX(chartArea.getMinX()); crossHairHorizontal.setStartY(y + TOP + xAxisArea.getHeight());
             crossHairHorizontal.setEndX(chartArea.getMaxX()); crossHairHorizontal.setEndY(y + TOP + xAxisArea.getHeight());
         }
+    }
+
+    private void drawCenterCross() {
+        double centerX       = chartArea.getWidth() * 0.5;
+        double centerY       = chartArea.getHeight() * 0.5;
+        double chartSize     = chartArea.getWidth() < chartArea.getHeight() ? chartArea.getWidth() : chartArea.getHeight();
+        double halfCrossSize = chartSize * 0.0372549 * 0.5;
+        double vStartX       = centerX;
+        double vStartY       = centerY - halfCrossSize;
+        double vEndX         = centerX;
+        double vEndY         = centerY + halfCrossSize;
+        double hStartX       = centerX - halfCrossSize;
+        double hStartY       = centerY;
+        double hEndX         = centerX + halfCrossSize;
+        double hEndY         = centerY;
+
+        if (Position.LEFT == _yAxisPosition) {
+            vStartX += LEFT + yAxisArea.getWidth();
+            vEndX   += LEFT + yAxisArea.getWidth();
+            hStartX += LEFT + yAxisArea.getWidth();
+            hEndX   += LEFT + yAxisArea.getWidth();
+        } else {
+            vStartX += LEFT;
+            vEndX   += LEFT;
+            hStartX += LEFT;
+            hEndX   += LEFT;
+        }
+        if (Position.BOTTOM == _xAxisPosition) {
+            vStartY += TOP;
+            vEndY   += TOP;
+            hStartY += TOP;
+            hEndY   += TOP;
+        } else {
+            vStartY += TOP + xAxisArea.getHeight();
+            vEndY   += TOP + xAxisArea.getHeight();
+            hStartY += TOP + xAxisArea.getHeight();
+            hEndY   += TOP + xAxisArea.getHeight();
+        }
+
+        centerCrossVertical.setStartX(vStartX); centerCrossVertical.setStartY(vStartY);
+        centerCrossVertical.setEndX(vEndX); centerCrossVertical.setEndY(vEndY);
+
+        centerCrossHorizontal.setStartX(hStartX); centerCrossHorizontal.setStartY(hStartY);
+        centerCrossHorizontal.setEndX(hEndX); centerCrossHorizontal.setEndY(hEndY);
     }
 
     private void drawOverview() {
@@ -1919,9 +2192,9 @@ public class DataViewer extends Region {
             canvasGrid.setHeight(chartArea.getHeight());
             canvasGrid.relocate(chartArea.getX(), chartArea.getY());
 
-            canvasDataLayer.setWidth(chartArea.getWidth());
-            canvasDataLayer.setHeight(chartArea.getHeight());
-            canvasDataLayer.relocate(chartArea.getX(), chartArea.getY());
+            canvasOverlays.setWidth(chartArea.getWidth());
+            canvasOverlays.setHeight(chartArea.getHeight());
+            canvasOverlays.relocate(chartArea.getX(), chartArea.getY());
 
             if (toolBox.getLayoutBounds().getWidth() != 0) {
                 double inset = 10;

@@ -86,8 +86,8 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
         return (B)this;
     }
 
-    public final B infoTextColor(final Color COLOR) {
-        properties.put("infoTextColor", new SimpleObjectProperty(COLOR));
+    public final B coordinatesTextColor(final Color COLOR) {
+        properties.put("coordinatesTextColor", new SimpleObjectProperty(COLOR));
         return (B)this;
     }
 
@@ -171,18 +171,28 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
         return (B)this;
     }
 
+    public final B zoomInToolVisible(final boolean VISIBLE) {
+        properties.put("zoomInToolVisible", new SimpleBooleanProperty(VISIBLE));
+        return (B)this;
+    }
+
+    public final B zoomOutToolVisible(final boolean VISIBLE) {
+        properties.put("zoomOutToolVisible", new SimpleBooleanProperty(VISIBLE));
+        return (B)this;
+    }
+
     public final B adjustGridToData(final boolean ADJUST) {
         properties.put("adjustGridToData", new SimpleBooleanProperty(ADJUST));
         return (B)this;
     }
 
-    public final B series(final Series... SERIES) {
-        properties.put("seriesArray", new SimpleObjectProperty<>(SERIES));
+    public final B overlays(final Overlay... OVERLAYS) {
+        properties.put("overlaysArray", new SimpleObjectProperty<>(OVERLAYS));
         return (B)this;
     }
 
-    public final B series(final List<Series> SERIES) {
-        properties.put("seriesList", new SimpleObjectProperty<>(SERIES));
+    public final B overlays(final List<Overlay> OVERLAYS) {
+        properties.put("overlaysList", new SimpleObjectProperty<>(OVERLAYS));
         return (B)this;
     }
 
@@ -281,6 +291,36 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
         return (B)this;
     }
 
+    public final B centerCrossVisible(final boolean VISIBLE) {
+        properties.put("centerCrossVisible", new SimpleBooleanProperty(VISIBLE));
+        return (B)this;
+    }
+
+    public final B centerCrossColor(final Color COLOR) {
+        properties.put("centerCrossColor", new SimpleObjectProperty<>(COLOR));
+        return (B)this;
+    }
+
+    public final B toolboxItemBackgroundColor(final Color COLOR) {
+        properties.put("toolboxItemBackgroundColor", new SimpleObjectProperty<>(COLOR));
+        return (B)this;
+    }
+
+    public final B toolboxItemColor(final Color COLOR) {
+        properties.put("toolboxItemColor", new SimpleObjectProperty<>(COLOR));
+        return (B)this;
+    }
+
+    public final B toolboxSelectedItemBackgroundColor(final Color COLOR) {
+        properties.put("toolboxSelectedItemBackgroundColor", new SimpleObjectProperty<>(COLOR));
+        return (B)this;
+    }
+
+    public final B toolboxSelectedItemColor(final Color COLOR) {
+        properties.put("toolboxSelectedItemBackgroundColor", new SimpleObjectProperty<>(COLOR));
+        return (B)this;
+    }
+
     public final B prefSize(final double WIDTH, final double HEIGHT) {
         properties.put("prefSize", new SimpleObjectProperty<>(new Dimension2D(WIDTH, HEIGHT)));
         return (B)this;
@@ -356,11 +396,11 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
     public final DataViewer build() {
         final DataViewer CONTROL = new DataViewer();
 
-        if (properties.keySet().contains("seriesArray")) {
-            CONTROL.setSeries(((ObjectProperty<Series[]>) properties.get("seriesArray")).get());
+        if (properties.keySet().contains("overlaysArray")) {
+            CONTROL.setOverlays(((ObjectProperty<Overlay[]>) properties.get("overlaysArray")).get());
         }
-        if(properties.keySet().contains("seriesList")) {
-            CONTROL.setSeries(((ObjectProperty<List<Series>>) properties.get("seriesList")).get());
+        if(properties.keySet().contains("overlaysList")) {
+            CONTROL.setOverlays(((ObjectProperty<List<Overlay>>) properties.get("overlaysList")).get());
         }
 
         for (String key : properties.keySet()) {
@@ -405,8 +445,8 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
                 CONTROL.setSelectionColor(((ObjectProperty<Color>) properties.get(key)).get());
             } else if ("backgroundColor".equals(key)) {
                 CONTROL.setBackgroundColor(((ObjectProperty<Color>) properties.get(key)).get());
-            } else if ("infoTextColor".equals(key)) {
-                CONTROL.setInfoTextColor(((ObjectProperty<Color>) properties.get(key)).get());
+            } else if ("coordinatesTextColor".equals(key)) {
+                CONTROL.setCoordinatesTextColor(((ObjectProperty<Color>) properties.get(key)).get());
             } else if ("axisTextColor".equals(key)) {
                 CONTROL.setAxisTextColor(((ObjectProperty<Color>) properties.get(key)).get());
             } else if ("axisColor".equals(key)) {
@@ -438,7 +478,7 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
             } else if("overviewPosition".equals(key)) {
                 CONTROL.setOverviewPosition(((ObjectProperty<Pos>) properties.get(key)).get());
             } else if ("dataLayerVisible".equals(key)) {
-                CONTROL.setDataLayerVisible(((BooleanProperty) properties.get(key)).get());
+                CONTROL.setOverlaysVisible(((BooleanProperty) properties.get(key)).get());
             } else if ("xAxisLabel".equals(key)) {
                 CONTROL.setXAxisLabel(((StringProperty) properties.get(key)).get());
             } else if ("yAxisLabel".equals(key)) {
@@ -453,6 +493,10 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
                 CONTROL.setPanToolVisible(((BooleanProperty) properties.get(key)).get());
             } else if ("zoomToolVisible".equals(key)) {
                 CONTROL.setZoomToolVisible(((BooleanProperty) properties.get(key)).get());
+            } else if ("zoomInToolVisible".equals(key)) {
+                CONTROL.setZoomInToolVisible(((BooleanProperty) properties.get(key)).get());
+            } else if ("zoomOutToolVisible".equals(key)) {
+                CONTROL.setZoomOutToolVisible(((BooleanProperty) properties.get(key)).get());
             } else if ("adjustGridToData".equals(key)) {
                 CONTROL.setAdjustGridToData(((BooleanProperty) properties.get(key)).get());
             } else if ("crossHairVisible".equals(key)) {
@@ -487,6 +531,18 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
                 CONTROL.setXAxisPosition(((ObjectProperty<Position>) properties.get(key)).get());
             } else if ("yAxisPosition".equals(key)) {
                 CONTROL.setYAxisPosition(((ObjectProperty<Position>) properties.get(key)).get());
+            } else if ("centerCrossVisible".equals(key)) {
+                CONTROL.setCenterCrossVisible(((BooleanProperty) properties.get(key)).get());
+            } else if ("centerCrossColor".equals(key)) {
+                CONTROL.setCenterCrossColor(((ObjectProperty<Color>) properties.get(key)).get());
+            } else if("toolboxItemBackgroundColor".equals(key)) {
+                CONTROL.setToolboxItemBackgroundColor(((ObjectProperty<Color>) properties.get(key)).get());
+            } else if("toolboxItemColor".equals(key)) {
+                CONTROL.setToolboxItemColor(((ObjectProperty<Color>) properties.get(key)).get());
+            } else if("toolboxSelectedItemBackgroundColor".equals(key)) {
+                CONTROL.setToolboxSelectedItemBackgroundColor(((ObjectProperty<Color>) properties.get(key)).get());
+            } else if("toolboxSelectedItemColor".equals(key)) {
+                CONTROL.setToolboxSelectedItemColor(((ObjectProperty<Color>) properties.get(key)).get());
             }
         }
         return CONTROL;

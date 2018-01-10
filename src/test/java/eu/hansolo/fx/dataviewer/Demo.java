@@ -16,7 +16,8 @@
 
 package eu.hansolo.fx.dataviewer;
 
-import eu.hansolo.fx.dataviewer.Series.Symbol;
+
+import eu.hansolo.fx.dataviewer.Overlay.Symbol;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -38,25 +39,43 @@ public class Demo extends Application {
     private DataViewer mainDataViewer;
 
     @Override public void init() {
-        String dataPairs1 = "1.0,1.0, 1.1,1.07, 1.2,1.17, 1.3,1.22, 1.4,1.29, 1.5,1.29, 1.6,1.31, 1.7,1.42, 1.8,1.56, 1.9,1.69, 2.0,1.85";
-        Series series1    = SeriesBuilder.create()
-                                         .name("CoastLine")
-                                         .dataPairs(dataPairs1)
-                                         .color(Color.LIME)
-                                         .symbol(Symbol.FILLED_CIRCLE)
-                                         .connected(true)
-                                         //.timeBased(true)
-                                         .build();
+        String xyPairs1  = "1.0,1.0, 1.1,1.07, 1.2,1.17, 1.3,1.22, 1.4,1.29, 1.5,1.29, 1.6,1.31, 1.7,1.42, 1.8,1.56, 1.9,1.69, 2.0,1.85";
+        Overlay overlay1 = OverlayBuilder.create()
+                                          .name("CoastLine")
+                                          .xyPairs(xyPairs1)
+                                          .stroke(Color.LIME)
+                                          .fill(Color.rgb(0, 255, 0, 0.5))
+                                          .symbolColor(Color.YELLOW)
+                                          .symbol(Symbol.FILLED_CIRCLE)
+                                          .doStroke(true)
+                                          .doFill(false)
+                                          //.timeBased(true)
+                                          .build();
 
-        String dataPairs2 = "1.066,1.115, 1.1,1.2, 1.2,1.1, 1.3,1.15, 1.4,1.20, 1.5,1.23, 1.6,1.4, 1.7,1.34, 1.8,1.45, 1.9,1.52, 2.0,1.7";
-        Series series2    = SeriesBuilder.create()
-                                         .name("CoastLine")
-                                         .dataPairs(dataPairs2)
-                                         .color(Color.rgb(0, 150, 200))
-                                         .symbol(Symbol.FILLED_SQUARE)
-                                         .connected(true)
-                                         //.timeBased(true)
-                                         .build();
+        String xyPairs2  = "1.066,1.115, 1.1,1.2, 1.2,1.1, 1.3,1.15, 1.4,1.20, 1.5,1.23, 1.6,1.4, 1.7,1.34, 1.8,1.45, 1.9,1.52, 2.0,1.7";
+        Overlay overlay2  = OverlayBuilder.create()
+                                          .name("CoastLine")
+                                          .xyPairs(xyPairs2)
+                                          .stroke(Color.MAGENTA)
+                                          .symbolColor(Color.rgb(0, 200, 200))
+                                          .symbol(Symbol.FILLED_SQUARE)
+                                          .doStroke(true)
+                                          .doFill(false)
+                                          //.timeBased(true)
+                                          .build();
+
+        String xyPairs3 = "1.2,1.2, 1.5,1.2, 1.5,1.5, 1.2,1.5";
+        Overlay box1    = OverlayBuilder.create()
+                                        .name("Box 1")
+                                        .xyPairs(xyPairs3)
+                                        .fill(Color.rgb(0, 150, 250, 0.5))
+                                        .stroke(Color.rgb(0, 150, 250))
+                                        .symbolColor(Color.TRANSPARENT)
+                                        .symbol(Symbol.FILLED_SQUARE)
+                                        .symbolsVisible(false)
+                                        .doStroke(false)
+                                        .doFill(true)
+                                        .build();
 
         selectionDataViewerL = DataViewerBuilder.create()
                                                 .prefSize(512, 300)
@@ -69,10 +88,10 @@ public class Demo extends Application {
                                                 .yAxisDecimals(3)
                                                 //.xAxisLabel("Whatever X")
                                                 //.yAxisLabel("Whatever Y")
-                                                .infoTextColor(Color.WHITE)
+                                                .coordinatesTextColor(Color.WHITE)
                                                 .zoomColor(Color.rgb(26, 159, 249))
                                                 .selectionColor(Color.WHITE)
-                                                .series(series1, series2)
+                                                .overlays(overlay1, overlay2)
                                                 .dataLayerVisible(true)
                                                 .crossHairVisible(true)
                                                 .backgroundColor(Color.rgb(90, 90, 90))
@@ -99,11 +118,11 @@ public class Demo extends Application {
                                                 .yAxisDecimals(3)
                                                 .xAxisLabel("Whatever X")
                                                 .yAxisLabel("Whatever Y")
-                                                //.infoTextColor(Color.WHITE)
+                                                //.coordinatesTextColor(Color.WHITE)
                                                 //.zoomColor(Color.MAGENTA)
                                                 //.selectionColor(Color.RED)
                                                 .overviewRectColor(Color.rgb(255, 255, 255, 0.5))
-                                                .series(series1, series2)
+                                                .overlays(overlay1, overlay2)
                                                 .dataLayerVisible(true)
                                                 .crossHairVisible(true)
                                                 .chartBackgroundColor(Color.DARKGRAY)
@@ -120,10 +139,10 @@ public class Demo extends Application {
                                           .yAxisDecimals(3)
                                           .xAxisLabel("Whatever X")
                                           .yAxisLabel("Whatever Y")
-                                          .infoTextColor(Color.WHITE)
+                                          .coordinatesTextColor(Color.WHITE)
                                           .zoomColor(Color.MAGENTA)
                                           .selectionColor(Color.RED)
-                                          .series(series1, series2)
+                                          .overlays(overlay1, overlay2, box1)
                                           .dataLayerVisible(true)
                                           //.toolboxVisible(false)
                                           //.toolboxPosition(Pos.BOTTOM_RIGHT)
@@ -136,6 +155,7 @@ public class Demo extends Application {
                                           .gridVisible(true)
                                           //.gridColor(Color.RED)
                                           .chartBackgroundColor(Color.rgb(90, 90, 90))
+                                          .centerCrossVisible(true)
                                           .build();
 
         selectionDataViewerR.setOnDataEvent(e -> {
