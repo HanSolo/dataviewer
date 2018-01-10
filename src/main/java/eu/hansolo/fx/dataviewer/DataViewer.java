@@ -2106,6 +2106,10 @@ public class DataViewer extends Region {
         }
     }
 
+    private void drawInfoBox() {
+        // TODO: Draw an info box with the selection details
+    }
+
 
     // ******************** Resizing ******************************************
     private void resize() {
