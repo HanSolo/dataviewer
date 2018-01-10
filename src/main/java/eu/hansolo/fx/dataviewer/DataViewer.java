@@ -76,9 +76,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @DefaultProperty("children")
 public class DataViewer extends Region {
-    public enum OverlayType {
-        LINE_CHART, AREA_CHART, CIRCLE, SQUARE, POLYGON
-    }
     private static final double                                         PREFERRED_WIDTH  = 1024;
     private static final double                                         PREFERRED_HEIGHT = 600;
     private static final double                                         MINIMUM_WIDTH    = 50;
@@ -1918,12 +1915,14 @@ public class DataViewer extends Region {
                 ctxOverlays.fill();
             }
             if (doStroke) {
+                ctxOverlays.setLineWidth(overlay.getLineWidth());
                 ctxOverlays.setStroke(overlay.getStroke());
                 ctxOverlays.stroke();
             }
 
             // Draw symbols
             if (overlay.isSymbolsVisible()) {
+                ctxOverlays.setLineWidth(1);
                 for (int i = 0; i < noOfPoints; i++) {
                     point = points.get(i);
                     x     = (point.getKey() - minX) * stepX;

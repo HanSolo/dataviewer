@@ -19,8 +19,11 @@ package eu.hansolo.fx.dataviewer;
 import eu.hansolo.fx.dataviewer.event.OverlayEvent;
 import eu.hansolo.fx.dataviewer.event.OverlayEvent.Type;
 import eu.hansolo.fx.dataviewer.event.OverlayEventListener;
+import eu.hansolo.fx.dataviewer.tools.Helper;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.BooleanPropertyBase;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.DoublePropertyBase;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
 import javafx.beans.property.StringProperty;
@@ -63,6 +66,8 @@ public class Overlay {
     private ObjectProperty<Symbol>                     symbol;
     private boolean                                    _timeBased;
     private BooleanProperty                            timeBased;
+    private double                                     _lineWidth;
+    private DoubleProperty                             lineWidth;
     private ObservableList<Pair<Double, Double>>       points;
     private CopyOnWriteArrayList<OverlayEventListener> listeners;
 
@@ -71,16 +76,16 @@ public class Overlay {
     public Overlay() {
         this("", false, true, true,
              DEFAULT_FILL, DEFAULT_STROKE, DEFAULT_SYMBOL_COLOR, DEFAULT_SYMBOL,false,
-             new ArrayList<>());
+             1.0, new ArrayList<>());
     }
     public Overlay(final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
-                   final Pair<Double, Double>... POINTS) {
-        this(NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, Arrays.asList(POINTS));
+                   final double LINE_WIDTH, final Pair<Double, Double>... POINTS) {
+        this(NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, Arrays.asList(POINTS));
     }
     public Overlay(final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
-                   final List<Pair<Double, Double>> POINTS) {
+                   final double LINE_WIDTH, final List<Pair<Double, Double>> POINTS) {
         _name           = NAME;
         _doFill         = DO_FILL;
         _doStroke       = DO_STROKE;
@@ -90,6 +95,7 @@ public class Overlay {
         _symbolColor    = SYMBOL_COLOR;
         _symbol         = SYMBOL;
         _timeBased      = TIME_BASED;
+        _lineWidth      = Helper.clamp(0.1, 10, LINE_WIDTH);
         points          = FXCollections.observableArrayList();
         listeners       = new CopyOnWriteArrayList<>();
 
@@ -282,6 +288,29 @@ public class Overlay {
             };
         }
         return timeBased;
+    }
+
+    public double getLineWidth() { return null == lineWidth ? _lineWidth : lineWidth.get(); }
+    public void setLineWidth(final double WIDTH) {
+        if (null == lineWidth) {
+            _lineWidth = Helper.clamp(0.1, 10, WIDTH);
+            fireOverlayEvent(UPDATE_EVENT);
+        } else {
+            lineWidth.set(WIDTH);
+        }
+    }
+    public DoubleProperty lineWidthProperty() {
+        if (null == lineWidth) {
+            lineWidth = new DoublePropertyBase(_lineWidth) {
+                @Override protected void invalidated() {
+                    set(Helper.clamp(0.1, 10, get()));
+                    fireOverlayEvent(UPDATE_EVENT);
+                }
+                @Override public Object getBean() { return Overlay.this; }
+                @Override public String getName() { return "lineWidth"; }
+            };
+        }
+        return lineWidth;
     }
 
     public ObservableList<Pair<Double,Double>> getPoints() { return points; }

@@ -20,9 +20,11 @@ import eu.hansolo.fx.dataviewer.Overlay.Symbol;
 import eu.hansolo.fx.dataviewer.event.OverlayEventListener;
 import eu.hansolo.fx.dataviewer.tools.Helper;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -112,6 +114,11 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
         return (B) this;
     }
 
+    public final B lineWidth(final double WIDTH) {
+        properties.put("lineWidth", new SimpleDoubleProperty(WIDTH));
+        return (B)this;
+    }
+
     public final B listeners(final OverlayEventListener... LISTENERS) {
         properties.put("listenersArray", new SimpleObjectProperty(LISTENERS));
         return (B)this;
@@ -163,6 +170,8 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
                 CONTROL.setSymbol(((ObjectProperty<Symbol>) properties.get(key)).get());
             } else if ("timeBased".equals(key)) {
                 CONTROL.setTimeBased(((BooleanProperty) properties.get(key)).get());
+            } else if ("lineWidth".equals(key)) {
+                CONTROL.setLineWidth(((DoubleProperty) properties.get(key)).get());
             }
         }
         return CONTROL;

@@ -61,6 +61,7 @@ public class Demo extends Application {
                                           .symbol(Symbol.FILLED_SQUARE)
                                           .doStroke(true)
                                           .doFill(false)
+                                          .lineWidth(2)
                                           //.timeBased(true)
                                           .build();
 
