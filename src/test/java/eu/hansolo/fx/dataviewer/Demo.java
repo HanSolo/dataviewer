@@ -65,10 +65,37 @@ public class Demo extends Application {
                                           //.timeBased(true)
                                           .build();
 
-        String xyPairs3 = "1.2,1.2, 1.5,1.2, 1.5,1.5, 1.2,1.5";
+        String  xyTimeBox1 = "1.0,1.0, 1.0,1.2, 1.3,1.2, 1.3,1.0";
+        Overlay timeBox1   = OverlayBuilder.create()
+                                        .name("TimeBox 1")
+                                        .xyPairs(xyTimeBox1)
+                                        .fill(Color.rgb(90, 90, 90, 0.5))
+                                        .stroke(Color.rgb(90, 90, 90))
+                                        .symbolColor(Color.TRANSPARENT)
+                                        .symbol(Symbol.CROSS)
+                                        .symbolsVisible(true)
+                                        .doStroke(false)
+                                        .doFill(true)
+                                        .build();
+
+        String  xyTimeBox2 = "1.4,1.0, 1.4,1.2, 1.6,1.2, 1.6,1.0";
+        Overlay timeBox2   = OverlayBuilder.create()
+                                           .name("TimeBox 2")
+                                           .xyPairs(xyTimeBox2)
+                                           .fill(Color.rgb(90, 90, 90, 0.5))
+                                           .stroke(Color.rgb(90, 90, 90))
+                                           .symbolColor(Color.TRANSPARENT)
+                                           .symbol(Symbol.CROSS)
+                                           .symbolsVisible(true)
+                                           .doStroke(false)
+                                           .doFill(true)
+                                           .build();
+
+
+        String xyPairs4 = "1.2,1.2, 1.4,1.2, 1.4,1.3, 1.2,1.3";
         Overlay box1    = OverlayBuilder.create()
                                         .name("Box 1")
-                                        .xyPairs(xyPairs3)
+                                        .xyPairs(xyPairs4)
                                         .fill(Color.rgb(0, 150, 250, 0.5))
                                         .stroke(Color.rgb(0, 150, 250))
                                         .symbolColor(Color.TRANSPARENT)
@@ -87,25 +114,13 @@ public class Demo extends Application {
                                                 .yAxisMax(2)
                                                 .xAxisDecimals(3)
                                                 .yAxisDecimals(3)
-                                                //.xAxisLabel("Whatever X")
-                                                //.yAxisLabel("Whatever Y")
-                                                .coordinatesTextColor(Color.WHITE)
-                                                .zoomColor(Color.rgb(26, 159, 249))
-                                                .selectionColor(Color.WHITE)
-                                                .overlays(overlay1, overlay2)
-                                                .dataLayerVisible(true)
+                                                .overlaysVisible(true)
                                                 .crossHairVisible(true)
-                                                .backgroundColor(Color.rgb(90, 90, 90))
-                                                //.chartBackgroundColor(Color.rgb(90, 90, 90))
-                                                //.axisBackgroundColor(Color.rgb(90, 90, 90))
-                                                .axisColor(Color.WHITE)
-                                                .axisTextColor(Color.WHITE)
-                                                .gridVisible(true)
-                                                .gridColor(Color.rgb(255, 255, 255, 0.1))
+                                                .coordinatesTextColor(Color.BLACK)
                                                 .axisAutoFontSize(false)
                                                 .axisTickLabelFontSize(13)
                                                 .axisTitleFontSize(13)
-                                                .yAxisPosition(Position.RIGHT)
+                                                .overlays(timeBox1, timeBox2)
                                                 .build();
 
         selectionDataViewerR = DataViewerBuilder.create()
@@ -124,7 +139,7 @@ public class Demo extends Application {
                                                 //.selectionColor(Color.RED)
                                                 .overviewRectColor(Color.rgb(255, 255, 255, 0.5))
                                                 .overlays(overlay1, overlay2)
-                                                .dataLayerVisible(true)
+                                                .overlaysVisible(true)
                                                 .crossHairVisible(true)
                                                 .chartBackgroundColor(Color.DARKGRAY)
                                                 .build();
@@ -144,7 +159,7 @@ public class Demo extends Application {
                                           .zoomColor(Color.MAGENTA)
                                           .selectionColor(Color.RED)
                                           .overlays(overlay1, overlay2, box1)
-                                          .dataLayerVisible(true)
+                                          .overlaysVisible(true)
                                           //.toolboxVisible(false)
                                           //.toolboxPosition(Pos.BOTTOM_RIGHT)
                                           //.selectToolVisible(false)

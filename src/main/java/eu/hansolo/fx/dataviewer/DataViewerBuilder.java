@@ -196,8 +196,8 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
         return (B)this;
     }
 
-    public final B dataLayerVisible(final boolean VISIBLE) {
-        properties.put("dataLayerVisible", new SimpleBooleanProperty(VISIBLE));
+    public final B overlaysVisible(final boolean VISIBLE) {
+        properties.put("overlaysVisible", new SimpleBooleanProperty(VISIBLE));
         return (B)this;
     }
 
@@ -477,7 +477,7 @@ public class DataViewerBuilder<B extends DataViewerBuilder<B>> {
                 CONTROL.setOverViewVisible(((BooleanProperty) properties.get(key)).get());
             } else if("overviewPosition".equals(key)) {
                 CONTROL.setOverviewPosition(((ObjectProperty<Pos>) properties.get(key)).get());
-            } else if ("dataLayerVisible".equals(key)) {
+            } else if ("overlaysVisible".equals(key)) {
                 CONTROL.setOverlaysVisible(((BooleanProperty) properties.get(key)).get());
             } else if ("xAxisLabel".equals(key)) {
                 CONTROL.setXAxisLabel(((StringProperty) properties.get(key)).get());

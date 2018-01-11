@@ -1624,7 +1624,7 @@ public class DataViewer extends Region {
         } else {
             panSelection = false;
             selectionRect.setStroke(Helper.getColorWithOpacity(getSelectionColor(), 0.6));
-            selectionRect.setFill(Helper.getColorWithOpacity(getSelectionColor(), 0.2));
+            selectionRect.setFill(Helper.getColorWithOpacity(getSelectionColor(), 0.4));
             selectionRect.setX(X_IN_WINDOW);
             selectionRect.setY(Y_IN_WINDOW);
             selectionRect.setWidth(0);
@@ -2188,7 +2188,6 @@ public class DataViewer extends Region {
     }
 
 
-
     // ******************** Resizing ******************************************
     private void resize() {
         width  = getWidth() - getInsets().getLeft() - getInsets().getRight();
@@ -2280,6 +2279,8 @@ public class DataViewer extends Region {
             // Info Box with selected area parameters
             infoBox.setWidth(0.25 * width);
             infoBox.setHeight(0.25 * infoBox.getWidth());
+            infoBox.setArcWidth(infoBox.getHeight() * 0.1);
+            infoBox.setArcHeight(infoBox.getHeight() * 0.1);
             infoBox.relocate(chartArea.getMinX() + size * 0.01, chartArea.getMinY() + size * 0.01);
 
             Font infoBoxFont = Fonts.latoRegular(0.25 * infoBox.getHeight());
