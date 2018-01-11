@@ -39,8 +39,10 @@ import javafx.beans.property.StringPropertyBase;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
@@ -54,6 +56,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -63,6 +66,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Pair;
@@ -115,6 +119,15 @@ public class DataViewer extends Region {
     private              Rectangle                                      overviewRect;
     private              Rectangle                                      viewportRect;
     private              Text                                           coordinatesText;
+    private              Rectangle                                      infoBox;
+    private              Text                                           selectionTextX;
+    private              Text                                           selectionTextY;
+    private              Text                                           selectionTextW;
+    private              Text                                           selectionTextH;
+    private              Text                                           selectionTextXValue;
+    private              Text                                           selectionTextYValue;
+    private              Text                                           selectionTextWValue;
+    private              Text                                           selectionTextHValue;
     private              Axis                                           xAxis;
     private              Axis                                           yAxis;
     private              Pane                                           pane;
@@ -303,8 +316,9 @@ public class DataViewer extends Region {
         mouseHandler   = e -> {
             double    x         = e.getX();
             double    y         = e.getY();
-            double    valueX    = (x * scaleX) + xAxis.getMinValue();
-            double    valueY    = ((chartArea.getHeight() - y) * scaleY) + yAxis.getMinValue();
+            double[]  values    = getChartCoordinatesFromXY(x, y);
+            double    valueX    = values[0];
+            double    valueY    = values[1];
             String    text      = String.format(getLocale(), formatString, valueX) + ", " + String.format(getLocale(), formatString, valueY);
             coordinatesText.setText(text);
             double    textWidth = coordinatesText.getLayoutBounds().getWidth();
@@ -326,7 +340,7 @@ public class DataViewer extends Region {
                 textY     = y < 25 + xAxisArea.getHeight() ? y + 20 + xAxisArea.getHeight() : y - 13 + xAxisArea.getHeight();
                 yInWindow = TOP + xAxisArea.getHeight() + y;
             }
-            EventType type      = e.getEventType();
+            EventType type = e.getEventType();
             if (MouseEvent.MOUSE_ENTERED.equals(type)) {
                 mouseEntered(x, y);
             } else if (MouseEvent.MOUSE_EXITED.equals(type)) {
@@ -429,12 +443,26 @@ public class DataViewer extends Region {
         centerCrossHorizontal.setStroke(getCenterCrossColor());
         centerCrossHorizontal.setVisible(false);
 
-        centerCrossVertical   = new Line();
+        centerCrossVertical = new Line();
         centerCrossVertical.setStroke(getCenterCrossColor());
         centerCrossVertical.setVisible(false);
 
+        infoBox = new Rectangle();
+        infoBox.setFill(Color.rgb(0, 0, 0, 0.78));
+        infoBox.setVisible(false);
+
+        selectionTextX      = createInfoText("X:", Color.WHITE);
+        selectionTextY      = createInfoText("Y:", Color.WHITE);
+        selectionTextW      = createInfoText("W:", Color.WHITE);
+        selectionTextH      = createInfoText("H:", Color.WHITE);
+        selectionTextXValue = createInfoText("-", Color.rgb(180, 180, 180));
+        selectionTextYValue = createInfoText("-", Color.rgb(180, 180, 180));
+        selectionTextWValue = createInfoText("-", Color.rgb(180, 180, 180));
+        selectionTextHValue = createInfoText("-", Color.rgb(180, 180, 180));
+
         pane = new Pane(xAxis, yAxis, chartBackgroundRect, imageView, canvasGrid, crossHairHorizontal, crossHairVertical, overviewRect, viewportRect, canvasOverlays, selectionRect, toolBox,
-                        coordinatesText, centerCrossHorizontal, centerCrossVertical);
+                        coordinatesText, centerCrossHorizontal, centerCrossVertical,
+                        infoBox, selectionTextX, selectionTextXValue, selectionTextY, selectionTextYValue, selectionTextW, selectionTextWValue, selectionTextH, selectionTextHValue);
 
         getChildren().setAll(pane);
     }
@@ -450,6 +478,7 @@ public class DataViewer extends Region {
         canvasOverlays.addEventHandler(MouseEvent.MOUSE_RELEASED, mouseHandler);
         zoomInTool.addEventHandler(MouseEvent.MOUSE_PRESSED, zoomInHandler);
         zoomOutTool.addEventHandler(MouseEvent.MOUSE_PRESSED, zoomOutHandler);
+        selectTool.selectedProperty().addListener(o -> showInfoBox(selectTool.isSelected()));
 
         // Resize once the control is shown on the screen to apply
         // settings that have been modified before the control was visible
@@ -1590,6 +1619,8 @@ public class DataViewer extends Region {
             panSelection = true;
             panOffsetX   = (X_IN_WINDOW) - selectionRect.getX();
             panOffsetY   = (Y_IN_WINDOW) - selectionRect.getY();
+            selectionTextXValue.setText(String.format(getLocale(), formatString, panOffsetX));
+            selectionTextYValue.setText(String.format(getLocale(), formatString, panOffsetY));
         } else {
             panSelection = false;
             selectionRect.setStroke(Helper.getColorWithOpacity(getSelectionColor(), 0.6));
@@ -1601,6 +1632,14 @@ public class DataViewer extends Region {
             selectionStartX = X;
             selectionStartY = Y;
         }
+        // Update InfoBox
+        Bounds   bounds      = selectionRect.getBoundsInParent();
+        double[] startValues = getChartCoordinatesFromXY(bounds.getMinX() - LEFT - yAxisArea.getWidth(), bounds.getMinY() - TOP);
+        double[] endValues   = getChartCoordinatesFromXY(bounds.getMaxX() - LEFT - yAxisArea.getWidth(), bounds.getMaxY() - TOP);
+        selectionTextXValue.setText(String.format(getLocale(), formatString, startValues[0]));
+        selectionTextYValue.setText(String.format(getLocale(), formatString, startValues[1]));
+        selectionTextWValue.setText(String.format(getLocale(), formatString, endValues[0] - startValues[0]));
+        selectionTextHValue.setText(String.format(getLocale(), formatString, startValues[1] - endValues[1]));
     }
     private void dragSelection(final double X, final double Y) {
         if (panSelection) {
@@ -1610,6 +1649,13 @@ public class DataViewer extends Region {
             selectionRect.setWidth(Helper.clamp(0, chartArea.getWidth(), X) - selectionStartX);
             selectionRect.setHeight(Helper.clamp(0, chartArea.getHeight(), Y) - selectionStartY);
         }
+        Bounds   bounds      = selectionRect.getBoundsInParent();
+        double[] startValues = getChartCoordinatesFromXY(bounds.getMinX() - LEFT - yAxisArea.getWidth(), bounds.getMinY() - TOP);
+        double[] endValues   = getChartCoordinatesFromXY(bounds.getMaxX() - LEFT - yAxisArea.getWidth(), bounds.getMaxY() - TOP);
+        selectionTextXValue.setText(String.format(getLocale(), formatString, startValues[0]));
+        selectionTextYValue.setText(String.format(getLocale(), formatString, startValues[1]));
+        selectionTextWValue.setText(String.format(getLocale(), formatString, endValues[0] - startValues[0]));
+        selectionTextHValue.setText(String.format(getLocale(), formatString, startValues[1] - endValues[1]));
     }
     private void endSelection(final double X, final double Y) {
         selectedArea.setMinX((((selectionRect.getX() - LEFT - yAxisArea.getWidth()) * scaleX) + xAxis.getMinValue()));
@@ -1623,6 +1669,14 @@ public class DataViewer extends Region {
             selectedArea.setMinY(getYAxisMin());
             selectedArea.setMaxY(getYAxisMax());
         }
+        Bounds   bounds      = selectionRect.getBoundsInParent();
+        double[] startValues = getChartCoordinatesFromXY(bounds.getMinX() - LEFT - yAxisArea.getWidth(), bounds.getMinY() - TOP);
+        double[] endValues   = getChartCoordinatesFromXY(bounds.getMaxX() - LEFT - yAxisArea.getWidth(), bounds.getMaxY() - TOP);
+        selectionTextXValue.setText(String.format(getLocale(), formatString, startValues[0]));
+        selectionTextYValue.setText(String.format(getLocale(), formatString, startValues[1]));
+        selectionTextWValue.setText(String.format(getLocale(), formatString, endValues[0] - startValues[0]));
+        selectionTextHValue.setText(String.format(getLocale(), formatString, startValues[1] - endValues[1]));
+
         // Fire event that contains the selected area
         fireDataEvent(new DataViewerEvent(DataViewer.this, Type.SELECT, selectedArea));
     }
@@ -1822,6 +1876,24 @@ public class DataViewer extends Region {
         gridToImageScaleY = initialImageHeight / initialRangeY;
         zoomStepX         = initialRangeX / MAX_ZOOM_LEVEL;
         zoomStepY         = initialRangeY / MAX_ZOOM_LEVEL;
+    }
+
+    private void showInfoBox(final boolean SHOW) {
+        infoBox.setVisible(SHOW);
+        selectionTextX.setVisible(SHOW);
+        selectionTextXValue.setVisible(SHOW);
+        selectionTextY.setVisible(SHOW);
+        selectionTextYValue.setVisible(SHOW);
+        selectionTextW.setVisible(SHOW);
+        selectionTextWValue.setVisible(SHOW);
+        selectionTextH.setVisible(SHOW);
+        selectionTextHValue.setVisible(SHOW);
+    }
+
+    private double[] getChartCoordinatesFromXY(final double X, final double Y) {
+        double valueX = (X * scaleX) + xAxis.getMinValue();
+        double valueY = ((chartArea.getHeight() - Y) * scaleY) + yAxis.getMinValue();
+        return new double[] { valueX, valueY };
     }
 
 
@@ -2106,9 +2178,15 @@ public class DataViewer extends Region {
         }
     }
 
-    private void drawInfoBox() {
-        // TODO: Draw an info box with the selection details
+    private Text createInfoText(final String TEXT, final Color COLOR) {
+        Text text = new Text(TEXT);
+        text.setFont(Fonts.latoRegular(0.01666667 * size));
+        text.setFill(COLOR);
+        text.setTextOrigin(VPos.CENTER);
+        text.setVisible(false);
+        return text;
     }
+
 
 
     // ******************** Resizing ******************************************
@@ -2198,6 +2276,44 @@ public class DataViewer extends Region {
             canvasOverlays.setWidth(chartArea.getWidth());
             canvasOverlays.setHeight(chartArea.getHeight());
             canvasOverlays.relocate(chartArea.getX(), chartArea.getY());
+
+            // Info Box with selected area parameters
+            infoBox.setWidth(0.25 * width);
+            infoBox.setHeight(0.25 * infoBox.getWidth());
+            infoBox.relocate(chartArea.getMinX() + size * 0.01, chartArea.getMinY() + size * 0.01);
+
+            Font infoBoxFont = Fonts.latoRegular(0.25 * infoBox.getHeight());
+            selectionTextX.setFont(infoBoxFont);
+            selectionTextX.setX(chartArea.getMinX() + size * 0.02);
+            selectionTextX.setY(chartArea.getMinY() + infoBoxFont.getSize() + size * 0.01);
+
+            selectionTextXValue.setFont(infoBoxFont);
+            selectionTextXValue.setX(selectionTextX.getX() + selectionTextX.getLayoutBounds().getWidth() + size * 0.01);
+            selectionTextXValue.setY(selectionTextX.getY());
+
+            selectionTextY.setFont(infoBoxFont);
+            selectionTextY.setX(selectionTextX.getX());
+            selectionTextY.setY(selectionTextX.getY() + infoBoxFont.getSize() * 2);
+
+            selectionTextYValue.setFont(infoBoxFont);
+            selectionTextYValue.setX(selectionTextX.getX() + selectionTextX.getLayoutBounds().getWidth() + size * 0.01);
+            selectionTextYValue.setY(selectionTextY.getY());
+
+            selectionTextW.setFont(infoBoxFont);
+            selectionTextW.setX(selectionTextX.getX() + infoBox.getWidth() * 0.5);
+            selectionTextW.setY(selectionTextX.getY());
+
+            selectionTextWValue.setFont(infoBoxFont);
+            selectionTextWValue.setX(selectionTextW.getX() + selectionTextW.getLayoutBounds().getWidth() + size * 0.01);
+            selectionTextWValue.setY(selectionTextW.getY());
+
+            selectionTextH.setFont(infoBoxFont);
+            selectionTextH.setX(selectionTextW.getX());
+            selectionTextH.setY(selectionTextY.getY());
+
+            selectionTextHValue.setFont(infoBoxFont);
+            selectionTextHValue.setX(selectionTextWValue.getX());
+            selectionTextHValue.setY(selectionTextY.getY());
 
             if (toolBox.getLayoutBounds().getWidth() != 0) {
                 double inset = 10;
