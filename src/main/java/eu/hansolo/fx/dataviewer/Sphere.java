@@ -16,7 +16,10 @@
 
 package eu.hansolo.fx.dataviewer;
 
+import eu.hansolo.fx.dataviewer.event.SelectionEvent;
+import eu.hansolo.fx.dataviewer.event.SelectionEventListener;
 import eu.hansolo.fx.dataviewer.tools.CtxDimension;
+import eu.hansolo.fx.dataviewer.tools.Helper;
 import javafx.beans.DefaultProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
@@ -31,6 +34,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 
+import java.util.concurrent.CopyOnWriteArrayList;
+
 
 /**
  * User: hansolo
@@ -39,34 +44,43 @@ import javafx.scene.paint.Color;
  */
 @DefaultProperty("children")
 public class Sphere extends Region {
-    private static final double                   PREFERRED_WIDTH  = 260;
-    private static final double                   PREFERRED_HEIGHT = 240;
-    private static final double                   MINIMUM_WIDTH    = 50;
-    private static final double                   MINIMUM_HEIGHT   = 50;
-    private static final double                   MAXIMUM_WIDTH    = 1024;
-    private static final double                   MAXIMUM_HEIGHT   = 1024;
-    private static       double                   aspectRatio;
-    private              boolean                  keepAspect;
-    private              double                   size;
-    private              double                   width;
-    private              double                   height;
-    private              Canvas                   canvasOval;
-    private              GraphicsContext          ctxOval;
-    private              Canvas                   canvasGrid;
-    private              GraphicsContext          ctxGrid;
-    private              Pane                     pane;
-    private              Color                    _gridColor;
-    private              ObjectProperty<Color>    gridColor;
-    private              EventHandler<MouseEvent> mouseHandler;
+    private static final double                                       PREFERRED_WIDTH  = 260;
+    private static final double                                       PREFERRED_HEIGHT = 240;
+    private static final double                                       MINIMUM_WIDTH    = 50;
+    private static final double                                       MINIMUM_HEIGHT   = 50;
+    private static final double                                       MAXIMUM_WIDTH    = 1024;
+    private static final double                                       MAXIMUM_HEIGHT   = 1024;
+    private static       double                                       aspectRatio;
+    private              boolean                                      keepAspect;
+    private              double                                       size;
+    private              double                                       width;
+    private              double                                       height;
+    private              Canvas                                       canvasOval;
+    private              GraphicsContext                              ctxOval;
+    private              Canvas                                       canvasGrid;
+    private              GraphicsContext                              ctxGrid;
+    private              Pane                                         pane;
+    private              Color                                        _gridColor;
+    private              ObjectProperty<Color>                        gridColor;
+    private              Color                                        _selectionColor;
+    private              ObjectProperty<Color>                        selectionColor;
+    private              Color                                        hoverColor;
+    private              Color                                        selectedColor;
+    private              EventHandler<MouseEvent>                     mouseHandler;
+    private              CopyOnWriteArrayList<SelectionEventListener> listeners;
 
 
     // ******************** Constructors **************************************
     public Sphere() {
         getStylesheets().add(Sphere.class.getResource("sphere.css").toExternalForm());
-        aspectRatio  = PREFERRED_HEIGHT / PREFERRED_WIDTH;
-        keepAspect   = true;
-        _gridColor   = Color.rgb(128, 128, 128, 1.0);//0.2);
-        mouseHandler = e -> handleMouseEvent(e);
+        aspectRatio     = PREFERRED_HEIGHT / PREFERRED_WIDTH;
+        keepAspect      = true;
+        _gridColor      = Color.rgb(128, 128, 128, 1.0);//0.2);
+        _selectionColor = Color.rgb(30, 49, 116);
+        hoverColor      = Color.rgb(30, 49, 116, 0.25);
+        selectedColor   = Color.rgb(30, 49, 116, 0.75);
+        mouseHandler    = e -> handleMouseEvent(e);
+        listeners       = new CopyOnWriteArrayList<>();
         initGraphics();
         registerListeners();
     }
@@ -146,16 +160,52 @@ public class Sphere extends Region {
         return gridColor;
     }
 
+    public Color getSelectionColor() { return null == selectionColor ? _selectionColor : selectionColor.get(); }
+    public void setSelectionColor(final Color COLOR) {
+        if (null == selectionColor) {
+            _selectionColor = COLOR;
+            hoverColor    = Helper.getColorWithOpacity(getSelectionColor(), 0.25);
+            selectedColor = Helper.getColorWithOpacity(getSelectionColor(), 0.75);
+        } else {
+            selectionColor.set(COLOR);
+        }
+    }
+    public ObjectProperty<Color> selectionColorProperty() {
+        if (null == selectionColor) {
+            selectionColor = new ObjectPropertyBase<Color>(_selectionColor) {
+                @Override protected void invalidated() {
+                    hoverColor    = Helper.getColorWithOpacity(getSelectionColor(), 0.25);
+                    selectedColor = Helper.getColorWithOpacity(getSelectionColor(), 0.75);
+                };
+                @Override public Object getBean() { return Sphere.this; }
+                @Override public String getName() { return "selectionColor"; }
+            };
+            _selectionColor = null;
+        }
+        return selectionColor;
+    }
+
     private void handleMouseEvent(final MouseEvent EVT) {
         final EventType<? extends MouseEvent> TYPE = EVT.getEventType();
         if (MouseEvent.MOUSE_MOVED.equals(TYPE)) {
-            drawTile(EVT, Color.rgb(30, 49, 116, 0.25));
+            drawTile(EVT, hoverColor, false);
         } else if (MouseEvent.MOUSE_PRESSED.equals(TYPE)) {
-            drawTile(EVT, Color.rgb(30, 49, 116, 0.75));
+            drawTile(EVT, selectedColor, true);
         } else if (MouseEvent.MOUSE_RELEASED.equals(TYPE)) {
-            drawTile(EVT, Color.rgb(30, 49, 116, 0.25));
+            drawTile(EVT, hoverColor, false);
         }
     }
+
+
+    // ******************** Event handling ************************************
+    public void setOnSelectionEvent(final SelectionEventListener LISTENER) { addSelectionEventListener(LISTENER); }
+    public void addSelectionEventListener(final SelectionEventListener LISTENER) { if (!listeners.contains(LISTENER)) listeners.add(LISTENER); }
+    public void removeSelectionEventListener(final SelectionEventListener LISTENER) { if (listeners.contains(LISTENER)) listeners.remove(LISTENER); }
+
+    public void fireSelectionEvent(final SelectionEvent EVENT) {
+        for (SelectionEventListener listener : listeners) { listener.onSelectionEvent(EVENT); }
+    }
+
 
 
     // ******************** Drawing *******************************************
@@ -188,7 +238,7 @@ public class Sphere extends Region {
         }
     }
 
-    private void drawTile(final MouseEvent EVT, final Color COLOR) {
+    private void drawTile(final MouseEvent EVT, final Color COLOR, final boolean PRESSED) {
         double mouseX   = EVT.getX();
         double mouseY   = EVT.getY();
         double tileSize = size * 0.08333333;
@@ -216,6 +266,7 @@ public class Sphere extends Region {
                      Double.compare(mouseY, minY) >= 0 &&
                      Double.compare(mouseY, minY + tileSize) <= 0) {
                     ctxGrid.fillRect(minX, minY, tileSize, tileSize);
+                    if (PRESSED) { fireSelectionEvent(new SelectionEvent(this, new StringBuilder("Tile ").append(x).append("/").append(y).append(":").toString(), new CtxDimension(minX, minY, minX + tileSize, minY + tileSize))); }
                 }
             }
         }

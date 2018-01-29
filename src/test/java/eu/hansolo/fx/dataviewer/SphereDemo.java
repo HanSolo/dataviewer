@@ -32,6 +32,7 @@ public class SphereDemo extends Application {
 
     @Override public void init() {
         sphere = new Sphere();
+        sphere.setOnSelectionEvent(e -> System.out.println(e.getName() + "\n" + e.getTile()));
     }
 
     @Override public void start(Stage stage) {
