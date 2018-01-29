@@ -17,12 +17,10 @@
 package eu.hansolo.fx.dataviewer.tools;
 
 
-import eu.hansolo.fx.dataviewer.Overlay;
 import eu.hansolo.fx.dataviewer.TickLabelOrientation;
 import javafx.scene.Node;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.util.Pair;
 
 import java.time.Instant;
@@ -30,7 +28,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.LinkedList;
-import java.util.List;
 
 
 public class Helper {

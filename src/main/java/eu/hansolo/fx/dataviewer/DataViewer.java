@@ -56,6 +56,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -92,7 +93,7 @@ public class DataViewer extends Region {
     private static final double                                         BOTTOM           = 10;
     private static final double                                         LEFT             = 10;
     private static final int                                            MIN_ZOOM_LEVEL   = 1;
-    private static final int                                            MAX_ZOOM_LEVEL   = 24;
+    private static final int                                            MAX_ZOOM_LEVEL   = 25;
     private              double                                         size;
     private              double                                         width;
     private              double                                         height;
@@ -112,8 +113,8 @@ public class DataViewer extends Region {
     private              ToolButton                                     selectTool;
     private              ToolButton                                     panTool;
     private              ToolButton                                     zoomTool;
-    private              ToolButton                                     zoomInTool;
-    private              ToolButton                                     zoomOutTool;
+    //private              ToolButton                                     zoomInTool;
+    //private              ToolButton                                     zoomOutTool;
     private              HBox                                           toolBox;
     private              Rectangle                                      selectionRect;
     private              Rectangle                                      overviewRect;
@@ -287,8 +288,8 @@ public class DataViewer extends Region {
         formatString          = "%.0f";
         zoomFactorX           = 1.0;
         zoomFactorY           = 1.0;
-        zoomLevelX            = 1.0 / zoomFactorX;
-        zoomLevelY            = 1.0 / zoomFactorY;
+        zoomLevelX            = 1.0;
+        zoomLevelY            = 1.0;
         zoomLevel             = zoomLevelX < zoomLevelY ? (int) zoomLevelX : (int) zoomLevelY;
         zoomStepX             = 0.1;
         zoomStepY             = 0.1;
@@ -362,7 +363,7 @@ public class DataViewer extends Region {
                 }
             }
         };
-        zoomInHandler  = e -> setZoomLevel(zoomLevel == 1 ? (zoomLevel + 1) : (zoomLevel + 2));
+        zoomInHandler  = e -> setZoomLevel(zoomLevel + 2);
         zoomOutHandler = e -> setZoomLevel(zoomLevel - 2);
 
         initGraphics();
@@ -424,10 +425,10 @@ public class DataViewer extends Region {
         selectTool  = new ToolButton(Tool.SELECT, toggleGroup, "Select area");
         panTool     = new ToolButton(Tool.PAN, toggleGroup, "Pan zoomed area");
         zoomTool    = new ToolButton(Tool.ZOOM, toggleGroup, "Zoom to area");
-        zoomInTool  = new ToolButton(Tool.ZOOM_IN, toggleGroup, "Zoom in 2x", false);
-        zoomOutTool = new ToolButton(Tool.ZOOM_OUT, toggleGroup, "Zoom out 2x", false);
+        //zoomInTool  = new ToolButton(Tool.ZOOM_IN, toggleGroup, "Zoom in 2x", false);
+        //zoomOutTool = new ToolButton(Tool.ZOOM_OUT, toggleGroup, "Zoom out 2x", false);
 
-        toolBox = new HBox(5, selectTool, panTool, zoomTool, zoomInTool, zoomOutTool);
+        toolBox = new HBox(5, selectTool, panTool, zoomTool);//, zoomInTool, zoomOutTool);
         toolBox.relocate(PREFERRED_WIDTH - RIGHT - 10 - 94, 10 + TOP);
 
         coordinatesText = new Text("");
@@ -476,8 +477,8 @@ public class DataViewer extends Region {
         canvasOverlays.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseHandler);
         canvasOverlays.addEventHandler(MouseEvent.MOUSE_DRAGGED, mouseHandler);
         canvasOverlays.addEventHandler(MouseEvent.MOUSE_RELEASED, mouseHandler);
-        zoomInTool.addEventHandler(MouseEvent.MOUSE_PRESSED, zoomInHandler);
-        zoomOutTool.addEventHandler(MouseEvent.MOUSE_PRESSED, zoomOutHandler);
+        //zoomInTool.addEventHandler(MouseEvent.MOUSE_PRESSED, zoomInHandler);
+        //zoomOutTool.addEventHandler(MouseEvent.MOUSE_PRESSED, zoomOutHandler);
         selectTool.selectedProperty().addListener(o -> showInfoBox(selectTool.isSelected()));
 
         // Resize once the control is shown on the screen to apply
@@ -603,29 +604,29 @@ public class DataViewer extends Region {
         selectTool.setBackgroundColor(COLOR);
         panTool.setBackgroundColor(COLOR);
         zoomTool.setBackgroundColor(COLOR);
-        zoomInTool.setBackgroundColor(COLOR);
-        zoomOutTool.setBackgroundColor(COLOR);
+        //zoomInTool.setBackgroundColor(COLOR);
+        //zoomOutTool.setBackgroundColor(COLOR);
     }
     public void setToolboxItemColor(final Color COLOR) {
         selectTool.setFillColor(COLOR);
         panTool.setFillColor(COLOR);
         zoomTool.setFillColor(COLOR);
-        zoomInTool.setFillColor(COLOR);
-        zoomOutTool.setFillColor(COLOR);
+        //zoomInTool.setFillColor(COLOR);
+        //zoomOutTool.setFillColor(COLOR);
     }
     public void setToolboxSelectedItemBackgroundColor(final Color COLOR) {
         selectTool.setSelectedBackgroundColor(COLOR);
         panTool.setSelectedBackgroundColor(COLOR);
         zoomTool.setSelectedBackgroundColor(COLOR);
-        zoomInTool.setSelectedBackgroundColor(COLOR);
-        zoomOutTool.setSelectedBackgroundColor(COLOR);
+        //zoomInTool.setSelectedBackgroundColor(COLOR);
+        //zoomOutTool.setSelectedBackgroundColor(COLOR);
     }
     public void setToolboxSelectedItemColor(final Color COLOR) {
         selectTool.setSelectedColor(COLOR);
         panTool.setSelectedColor(COLOR);
         zoomTool.setSelectedColor(COLOR);
-        zoomInTool.setSelectedColor(COLOR);
-        zoomOutTool.setSelectedColor(COLOR);
+        //zoomInTool.setSelectedColor(COLOR);
+        //zoomOutTool.setSelectedColor(COLOR);
     }
 
     public boolean isPanToolVisible() { return null == panToolVisible ? _panToolVisible : panToolVisible.get(); }
@@ -680,7 +681,7 @@ public class DataViewer extends Region {
     public void setZoomOutToolVisible(final boolean VISIBLE) {
         if (null == zoomOutToolVisible) {
             _zoomOutToolVisible = VISIBLE;
-            Helper.enableNode(zoomOutTool, VISIBLE);
+            //Helper.enableNode(zoomOutTool, VISIBLE);
             resize();
         } else {
             zoomOutToolVisible.set(VISIBLE);
@@ -690,7 +691,7 @@ public class DataViewer extends Region {
         if (null == zoomOutToolVisible) {
             zoomOutToolVisible = new BooleanPropertyBase(_zoomOutToolVisible) {
                 @Override protected void invalidated() {
-                    Helper.enableNode(zoomOutTool, get());
+                    //Helper.enableNode(zoomOutTool, get());
                     resize();
                 }
                 @Override public Object getBean() { return DataViewer.this; }
@@ -704,7 +705,7 @@ public class DataViewer extends Region {
     public void setZoomInToolVisible(final boolean VISIBLE) {
         if (null == zoomInToolVisible) {
             _zoomInToolVisible = VISIBLE;
-            Helper.enableNode(zoomInTool, VISIBLE);
+            //Helper.enableNode(zoomInTool, VISIBLE);
             resize();
         } else {
             zoomInToolVisible.set(VISIBLE);
@@ -714,7 +715,7 @@ public class DataViewer extends Region {
         if (null == zoomInToolVisible) {
             zoomInToolVisible = new BooleanPropertyBase(_zoomInToolVisible) {
                 @Override protected void invalidated() {
-                    Helper.enableNode(zoomInTool, get());
+                    //Helper.enableNode(zoomInTool, get());
                     resize();
                 }
                 @Override public Object getBean() { return DataViewer.this; }
@@ -1473,8 +1474,6 @@ public class DataViewer extends Region {
 
     public void setZoomLevel(final int ZOOM_LEVEL) {
         boolean zoomOut = ZOOM_LEVEL < zoomLevel;
-
-        //zoomLevel = ZOOM_LEVEL % 2 == 0 ? ZOOM_LEVEL : zoomOut ? ZOOM_LEVEL - 1 : ZOOM_LEVEL + 1;
         zoomLevel = Helper.clamp(MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL, ZOOM_LEVEL);
 
         if (MIN_ZOOM_LEVEL == zoomLevel && zoomOut) {

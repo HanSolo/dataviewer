@@ -16,6 +16,9 @@
 
 package eu.hansolo.fx.dataviewer.tools;
 
+import javafx.geometry.Rectangle2D;
+
+
 public class CtxDimension {
     private double minX;
     private double oldMinX;
@@ -109,6 +112,8 @@ public class CtxDimension {
     public double getCenterX() { return minX + getWidth() * 0.5; }
     public double getCenterY() { return minY + getHeight() * 0.5; }
 
+    public Rectangle2D getRectangle() { return new Rectangle2D(getMinX(), getMinY(), getWidth(), getHeight()); }
+
     public void set(final CtxDimension DIM) {
         setMinX(DIM.getMinX());
         setMinY(DIM.getMinY());
@@ -120,6 +125,13 @@ public class CtxDimension {
         setMinY(MIN_Y);
         setMaxX(MAX_X);
         setMaxY(MAX_Y);
+    }
+
+    public boolean contains(final double X, final double Y) {
+        return (Double.compare(X, getMinX()) >= 0 &&
+                Double.compare(X, getMaxX()) <= 0 &&
+                Double.compare(Y, getMinY()) >= 0 &&
+                Double.compare(Y, getMaxY()) <= 0);
     }
 
     @Override public String toString() {

@@ -17,6 +17,9 @@
 package eu.hansolo.fx.dataviewer.tools;
 
 
+import javafx.geometry.Rectangle2D;
+
+
 public class CtxBounds {
     private double x;
     private double y;
@@ -91,6 +94,11 @@ public class CtxBounds {
         setY(x + SHIFT_Y);
     }
 
+    public double getCenterX() { return x + width * 0.5; }
+    public double getCenterY() { return y + height * 0.5; }
+
+    public Rectangle2D getRectangle() { return new Rectangle2D(getMinX(), getMinY(), getWidth(), getHeight()); }
+
     public void set(final CtxBounds BOUNDS) {
         setX(BOUNDS.getX());
         setY(BOUNDS.getY());
@@ -104,8 +112,12 @@ public class CtxBounds {
         setHeight(HEIGHT);
     }
 
-    public double getCenterX() { return x + width * 0.5; }
-    public double getCenterY() { return y + height * 0.5; }
+    public boolean contains(final double X, final double Y) {
+        return (Double.compare(X, getMinX()) >= 0 &&
+                Double.compare(X, getMaxX()) <= 0 &&
+                Double.compare(Y, getMinY()) >= 0 &&
+                Double.compare(Y, getMaxY()) <= 0);
+    }
 
     @Override public String toString() {
         return new StringBuilder().append("{\n")
