@@ -28,6 +28,10 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.geometry.Dimension2D;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.util.Pair;
@@ -119,6 +123,26 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
         return (B)this;
     }
 
+    public final B image(final Image IMAGE) {
+        properties.put("image", new SimpleObjectProperty(IMAGE));
+        return (B)this;
+    }
+
+    public final B imagePos(final Point2D POS) {
+        properties.put("imagePos", new SimpleObjectProperty(POS));
+        return (B)this;
+    }
+
+    public final B imageAnchor(final Pos ANCHOR) {
+        properties.put("imageAnchor", new SimpleObjectProperty(ANCHOR));
+        return (B)this;
+    }
+
+    public final B imageSize(final Dimension2D SIZE) {
+        properties.put("imageSize", new SimpleObjectProperty(SIZE));
+        return (B)this;
+    }
+
     public final B listeners(final OverlayEventListener... LISTENERS) {
         properties.put("listenersArray", new SimpleObjectProperty(LISTENERS));
         return (B)this;
@@ -172,6 +196,14 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
                 CONTROL.setTimeBased(((BooleanProperty) properties.get(key)).get());
             } else if ("lineWidth".equals(key)) {
                 CONTROL.setLineWidth(((DoubleProperty) properties.get(key)).get());
+            } else if ("image".equals(key)) {
+                CONTROL.setImage(((ObjectProperty<Image>) properties.get(key)).get());
+            } else if ("imagePos".equals(key)) {
+                CONTROL.setImagePos(((ObjectProperty<Point2D>) properties.get(key)).get());
+            } else if ("imageAnchor".equals(key)) {
+                CONTROL.setImageAnchor(((ObjectProperty<Pos>) properties.get(key)).get());
+            } else if ("imageSize".equals(key)) {
+                CONTROL.setImageSize(((ObjectProperty<Dimension2D>) properties.get(key)).get());
             }
         }
         return CONTROL;

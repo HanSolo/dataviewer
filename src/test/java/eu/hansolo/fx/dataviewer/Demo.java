@@ -19,7 +19,10 @@ package eu.hansolo.fx.dataviewer;
 
 import eu.hansolo.fx.dataviewer.Overlay.Symbol;
 import javafx.application.Application;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
@@ -39,6 +42,14 @@ public class Demo extends Application {
     private DataViewer mainDataViewer;
 
     @Override public void init() {
+        Overlay imageOverlay = OverlayBuilder.create()
+                                             .name("Duke")
+                                             .image(new Image(Demo.class.getResourceAsStream("duke.png")))
+                                             .imagePos(new Point2D(1.5, 1.5))
+                                             //.imageAnchor(Pos.TOP_LEFT)
+                                             //.imageSize(new Dimension2D(30, 30))
+                                             .build();
+
         String xyPairs1  = "1.0,1.0, 1.1,1.07, 1.2,1.17, 1.3,1.22, 1.4,1.29, 1.5,1.29, 1.6,1.31, 1.7,1.42, 1.8,1.56, 1.9,1.69, 2.0,1.85";
         Overlay overlay1 = OverlayBuilder.create()
                                           .name("CoastLine")
@@ -158,7 +169,7 @@ public class Demo extends Application {
                                           .coordinatesTextColor(Color.WHITE)
                                           .zoomColor(Color.MAGENTA)
                                           .selectionColor(Color.RED)
-                                          .overlays(overlay1, overlay2, box1)
+                                          .overlays(imageOverlay, overlay1, overlay2, box1)
                                           .overlaysVisible(true)
                                           //.toolboxVisible(false)
                                           //.toolboxPosition(Pos.BOTTOM_RIGHT)

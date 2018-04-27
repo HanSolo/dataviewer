@@ -30,10 +30,15 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.property.StringPropertyBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Dimension2D;
+import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.util.Pair;
 
+import java.rmi.UnmarshalException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,22 +73,39 @@ public class Overlay {
     private BooleanProperty                            timeBased;
     private double                                     _lineWidth;
     private DoubleProperty                             lineWidth;
+    private Image                                      image;
+    private Point2D                                    _imagePos;
+    private ObjectProperty<Point2D>                    imagePos;
+    private Dimension2D                                _imageSize;
+    private ObjectProperty<Dimension2D>                imageSize;
+    private Pos                                        _imageAnchor;
+    private ObjectProperty<Pos>                        imageAnchor;
     private ObservableList<Pair<Double, Double>>       points;
     private CopyOnWriteArrayList<OverlayEventListener> listeners;
 
 
     // ******************** Constructors **************************************
     public Overlay() {
-        this("", false, true, true,
+        this(null, new Point2D(0, 0), "", false, true, true,
+             DEFAULT_FILL, DEFAULT_STROKE, DEFAULT_SYMBOL_COLOR, DEFAULT_SYMBOL,false,
+             1.0, new ArrayList<>());
+    }
+    public Overlay(final Image IMAGE, final Point2D IMAGE_POS) {
+        this(IMAGE, IMAGE_POS, "", false, true, true,
              DEFAULT_FILL, DEFAULT_STROKE, DEFAULT_SYMBOL_COLOR, DEFAULT_SYMBOL,false,
              1.0, new ArrayList<>());
     }
     public Overlay(final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
                    final double LINE_WIDTH, final Pair<Double, Double>... POINTS) {
-        this(NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, Arrays.asList(POINTS));
+        this(null, new Point2D(0, 0), NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, Arrays.asList(POINTS));
     }
     public Overlay(final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
+                   final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
+                   final double LINE_WIDTH, final List<Pair<Double, Double>> POINTS) {
+        this(null, new Point2D(0, 0), NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, POINTS);
+    }
+    public Overlay(final Image IMAGE, final Point2D IMAGE_POS, final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
                    final double LINE_WIDTH, final List<Pair<Double, Double>> POINTS) {
         _name           = NAME;
@@ -96,6 +118,10 @@ public class Overlay {
         _symbol         = SYMBOL;
         _timeBased      = TIME_BASED;
         _lineWidth      = Helper.clamp(0.1, 10, LINE_WIDTH);
+        image           = IMAGE;
+        _imagePos       = null == IMAGE_POS ? _imagePos = new Point2D(0, 0) : IMAGE_POS;
+        _imageSize      = null == IMAGE ? new Dimension2D(0, 0) : new Dimension2D(IMAGE.getWidth(), IMAGE.getHeight());
+        _imageAnchor    = Pos.CENTER;
         points          = FXCollections.observableArrayList();
         listeners       = new CopyOnWriteArrayList<>();
 
@@ -311,6 +337,90 @@ public class Overlay {
             };
         }
         return lineWidth;
+    }
+
+    public Image getImage() { return image; }
+    public void setImage(final Image IMAGE) {
+        image = IMAGE;
+        if (null != IMAGE && (Double.compare(getImageSize().getWidth(), 0) == 0 ||
+            Double.compare(getImageSize().getHeight(), 0) == 0)) {
+            setImageSize(new Dimension2D(image.getWidth(), image.getHeight()));
+        }
+        fireOverlayEvent(UPDATE_EVENT);
+    }
+
+    public Point2D getImagePos() { return null == imagePos ? _imagePos : imagePos.get(); }
+    public void setImagePos(final Point2D POS) {
+        if (null == imagePos) {
+            _imagePos = null == POS ? new Point2D(0, 0) : POS;
+            fireOverlayEvent(UPDATE_EVENT);
+        } else {
+            imagePos.set(POS);
+        }
+    }
+    public ObjectProperty<Point2D> imagePosProperty() {
+        if (null == imagePos) {
+            imagePos = new ObjectPropertyBase<Point2D>(_imagePos) {
+                @Override protected void invalidated() {
+                    if (null == get()) { set(new Point2D(0, 0)); }
+                    fireOverlayEvent(UPDATE_EVENT);
+                }
+                @Override public void set(final Point2D POS) { super.set(null == POS ? new Point2D(0, 0) : POS); }
+                @Override public Object getBean() { return Overlay.this; }
+                @Override public String getName() { return "imagePos"; }
+            };
+            _imagePos = null;
+        }
+        return imagePos;
+    }
+
+    public Pos getImageAnchor() { return null == imageAnchor ? _imageAnchor : imageAnchor.get(); }
+    public void setImageAnchor(final Pos ANCHOR) {
+        if (null == ANCHOR) {
+            _imageAnchor = ANCHOR;
+            fireOverlayEvent(UPDATE_EVENT);
+        } else {
+            imageAnchor.set(ANCHOR);
+        }
+    }
+    public ObjectProperty<Pos> imageAnchorProperty() {
+        if (null == imageAnchor) {
+            imageAnchor = new ObjectPropertyBase<Pos>(_imageAnchor) {
+                @Override protected void invalidated() { fireOverlayEvent(UPDATE_EVENT); }
+                @Override public Object getBean() { return Overlay.this; }
+                @Override public String getName() { return "imageAnchor"; }
+            };
+            _imageAnchor = null;
+        }
+        return imageAnchor;
+    }
+
+    public Dimension2D getImageSize() { return null == imageSize ? _imageSize : imageSize.get(); }
+    public void setImageSize(final Dimension2D SIZE) {
+        if (null == imageSize) {
+            _imageSize = null == SIZE ? new Dimension2D(0, 0) : SIZE;
+            fireOverlayEvent(UPDATE_EVENT);
+        } else {
+            imageSize.set(SIZE);
+        }
+    }
+    public ObjectProperty<Dimension2D> imageSizeProperty() {
+        if (null == imageSize) {
+            imageSize = new ObjectPropertyBase<Dimension2D>(_imageSize) {
+                @Override protected void invalidated() {
+                    if (null == get()) { set(new Dimension2D(0, 0)); }
+                    fireOverlayEvent(UPDATE_EVENT);
+                }
+                @Override public void set(final Dimension2D SIZE) {
+                    super.set(null == SIZE ? new Dimension2D(0, 0) : SIZE);
+                }
+                @Override public Object getBean() { return Overlay.this; }
+                @Override public String getName() { return "imageSize"; }
+            };
+            _imageSize = null;
+        }
+
+        return imageSize;
     }
 
     public ObservableList<Pair<Double,Double>> getPoints() { return points; }
