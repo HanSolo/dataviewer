@@ -1988,48 +1988,49 @@ public class DataViewer extends Region {
                 }
                 ctxOverlays.drawImage(image, imageX ,imageY, imageW, imageH);
             } else {
-
                 List<Pair<Double, Double>> points     = overlay.getPoints();
                 int                        noOfPoints = points.size();
-                Symbol                     symbol     = overlay.getSymbol();
-                boolean                    doFill     = overlay.isDoFill();
-                boolean                    doStroke   = overlay.isDoStroke();
-                double                     x          = (points.get(0).getKey() - minX) * stepX;
-                double                     y          = chartHeight - (points.get(0).getValue() - minY) * stepY;
-                Pair<Double, Double>       point;
+                if (noOfPoints > 0) {
+                    Symbol               symbol   = overlay.getSymbol();
+                    boolean              doFill   = overlay.isDoFill();
+                    boolean              doStroke = overlay.isDoStroke();
+                    double               x        = (points.get(0).getKey() - minX) * stepX;
+                    double               y        = chartHeight - (points.get(0).getValue() - minY) * stepY;
+                    Pair<Double, Double> point;
 
-                ctxOverlays.beginPath();
-                ctxOverlays.moveTo(x, y);
-                for (int i = 1; i < noOfPoints; i++) {
-                    point = points.get(i);
-                    x = (point.getKey() - minX) * stepX;
-                    y = chartHeight - (point.getValue() - minY) * stepY;
-                    if (doFill || doStroke) {
-                        ctxOverlays.lineTo(x, y);
-                    }
-                }
-                if (doFill) {
-                    ctxOverlays.setFill(overlay.getFill());
-                    ctxOverlays.closePath();
-                    ctxOverlays.fill();
-                }
-                if (doStroke) {
-                    ctxOverlays.setLineWidth(overlay.getLineWidth());
-                    ctxOverlays.setStroke(overlay.getStroke());
-                    ctxOverlays.stroke();
-                }
-
-                // Draw symbols
-                if (overlay.isSymbolsVisible()) {
-                    ctxOverlays.setLineWidth(1);
-                    for (int i = 0; i < noOfPoints; i++) {
+                    ctxOverlays.beginPath();
+                    ctxOverlays.moveTo(x, y);
+                    for (int i = 1; i < noOfPoints; i++) {
                         point = points.get(i);
                         x = (point.getKey() - minX) * stepX;
                         y = chartHeight - (point.getValue() - minY) * stepY;
+                        if (doFill || doStroke) {
+                            ctxOverlays.lineTo(x, y);
+                        }
+                    }
+                    if (doFill) {
+                        ctxOverlays.setFill(overlay.getFill());
+                        ctxOverlays.closePath();
+                        ctxOverlays.fill();
+                    }
+                    if (doStroke) {
+                        ctxOverlays.setLineWidth(overlay.getLineWidth());
+                        ctxOverlays.setStroke(overlay.getStroke());
+                        ctxOverlays.stroke();
+                    }
 
-                        ctxOverlays.setStroke(overlay.getSymbolColor());
-                        ctxOverlays.setFill(overlay.getSymbolColor());
-                        drawSymbol(x, y, symbol, symbolSize);
+                    // Draw symbols
+                    if (overlay.isSymbolsVisible()) {
+                        ctxOverlays.setLineWidth(1);
+                        for (int i = 0; i < noOfPoints; i++) {
+                            point = points.get(i);
+                            x = (point.getKey() - minX) * stepX;
+                            y = chartHeight - (point.getValue() - minY) * stepY;
+
+                            ctxOverlays.setStroke(overlay.getSymbolColor());
+                            ctxOverlays.setFill(overlay.getSymbolColor());
+                            drawSymbol(x, y, symbol, symbolSize);
+                        }
                     }
                 }
             }
