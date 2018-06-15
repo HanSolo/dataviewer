@@ -1897,7 +1897,7 @@ public class DataViewer extends Region {
 
 
     // ******************** Drawing *******************************************
-    private void redraw() {
+    public void redraw() {
         if (isOverlaysVisible()) { drawOverlays(); }
         if (isGridVisible()) { drawGrid(); }
         if (isCenterCrossVisible()) { drawCenterCross(); }
@@ -2218,7 +2218,7 @@ public class DataViewer extends Region {
 
 
     // ******************** Resizing ******************************************
-    private void resize() {
+    public void resize() {
         width  = getWidth() - getInsets().getLeft() - getInsets().getRight();
         height = getHeight() - getInsets().getTop() - getInsets().getBottom();
         size   = width < height ? width : height;
