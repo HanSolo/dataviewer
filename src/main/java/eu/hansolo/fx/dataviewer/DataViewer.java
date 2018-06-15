@@ -1961,75 +1961,77 @@ public class DataViewer extends Region {
 
         ctxOverlays.clearRect(0, 0, chartWidth, chartHeight);
         overlays.forEach(overlay -> {
-            if (null != overlay.getImage()) {
-                Image  image  = overlay.getImage();
-                double imageX = (overlay.getImagePos().getX() - minX) * stepX;
-                double imageY = chartHeight - (overlay.getImagePos().getY() - minY) * stepY;
-                double imageW = overlay.getImageSize().getWidth();
-                double imageH = overlay.getImageSize().getHeight();
-                switch(overlay.getImageAnchor()) {
-                    case TOP_LEFT:
-                        break;
-                    case TOP_RIGHT:
-                        imageX -= imageW;
-                        break;
-                    case BOTTOM_LEFT:
-                        imageY -= imageH;
-                        break;
-                    case BOTTOM_RIGHT:
-                        imageX -= imageW;
-                        imageY -= imageH;
-                        break;
-                    case CENTER:
-                    default    :
-                        imageX -= imageW * 0.5;
-                        imageY -= imageH * 0.5;
-                        break;
-                }
-                ctxOverlays.drawImage(image, imageX ,imageY, imageW, imageH);
-            } else {
-                List<Pair<Double, Double>> points     = overlay.getPoints();
-                int                        noOfPoints = points.size();
-                if (noOfPoints > 0) {
-                    Symbol               symbol   = overlay.getSymbol();
-                    boolean              doFill   = overlay.isDoFill();
-                    boolean              doStroke = overlay.isDoStroke();
-                    double               x        = (points.get(0).getKey() - minX) * stepX;
-                    double               y        = chartHeight - (points.get(0).getValue() - minY) * stepY;
-                    Pair<Double, Double> point;
+            if (overlay.isVisible()) {
+                if (null != overlay.getImage()) {
+                    Image  image  = overlay.getImage();
+                    double imageX = (overlay.getImagePos().getX() - minX) * stepX;
+                    double imageY = chartHeight - (overlay.getImagePos().getY() - minY) * stepY;
+                    double imageW = overlay.getImageSize().getWidth();
+                    double imageH = overlay.getImageSize().getHeight();
+                    switch(overlay.getImageAnchor()) {
+                        case TOP_LEFT:
+                            break;
+                        case TOP_RIGHT:
+                            imageX -= imageW;
+                            break;
+                        case BOTTOM_LEFT:
+                            imageY -= imageH;
+                            break;
+                        case BOTTOM_RIGHT:
+                            imageX -= imageW;
+                            imageY -= imageH;
+                            break;
+                        case CENTER:
+                        default    :
+                            imageX -= imageW * 0.5;
+                            imageY -= imageH * 0.5;
+                            break;
+                    }
+                    ctxOverlays.drawImage(image, imageX ,imageY, imageW, imageH);
+                } else {
+                    List<Pair<Double, Double>> points     = overlay.getPoints();
+                    int                        noOfPoints = points.size();
+                    if (noOfPoints > 0) {
+                        Symbol               symbol   = overlay.getSymbol();
+                        boolean              doFill   = overlay.isDoFill();
+                        boolean              doStroke = overlay.isDoStroke();
+                        double               x        = (points.get(0).getKey() - minX) * stepX;
+                        double               y        = chartHeight - (points.get(0).getValue() - minY) * stepY;
+                        Pair<Double, Double> point;
 
-                    ctxOverlays.beginPath();
-                    ctxOverlays.moveTo(x, y);
-                    for (int i = 1; i < noOfPoints; i++) {
-                        point = points.get(i);
-                        x = (point.getKey() - minX) * stepX;
-                        y = chartHeight - (point.getValue() - minY) * stepY;
-                        if (doFill || doStroke) {
-                            ctxOverlays.lineTo(x, y);
-                        }
-                    }
-                    if (doFill) {
-                        ctxOverlays.setFill(overlay.getFill());
-                        ctxOverlays.closePath();
-                        ctxOverlays.fill();
-                    }
-                    if (doStroke) {
-                        ctxOverlays.setLineWidth(overlay.getLineWidth());
-                        ctxOverlays.setStroke(overlay.getStroke());
-                        ctxOverlays.stroke();
-                    }
-
-                    // Draw symbols
-                    if (overlay.isSymbolsVisible()) {
-                        ctxOverlays.setLineWidth(1);
-                        for (int i = 0; i < noOfPoints; i++) {
+                        ctxOverlays.beginPath();
+                        ctxOverlays.moveTo(x, y);
+                        for (int i = 1; i < noOfPoints; i++) {
                             point = points.get(i);
                             x = (point.getKey() - minX) * stepX;
                             y = chartHeight - (point.getValue() - minY) * stepY;
+                            if (doFill || doStroke) {
+                                ctxOverlays.lineTo(x, y);
+                            }
+                        }
+                        if (doFill) {
+                            ctxOverlays.setFill(overlay.getFill());
+                            ctxOverlays.closePath();
+                            ctxOverlays.fill();
+                        }
+                        if (doStroke) {
+                            ctxOverlays.setLineWidth(overlay.getLineWidth());
+                            ctxOverlays.setStroke(overlay.getStroke());
+                            ctxOverlays.stroke();
+                        }
 
-                            ctxOverlays.setStroke(overlay.getSymbolColor());
-                            ctxOverlays.setFill(overlay.getSymbolColor());
-                            drawSymbol(x, y, symbol, symbolSize);
+                        // Draw symbols
+                        if (overlay.isSymbolsVisible()) {
+                            ctxOverlays.setLineWidth(1);
+                            for (int i = 0; i < noOfPoints; i++) {
+                                point = points.get(i);
+                                x = (point.getKey() - minX) * stepX;
+                                y = chartHeight - (point.getValue() - minY) * stepY;
+
+                                ctxOverlays.setStroke(overlay.getSymbolColor());
+                                ctxOverlays.setFill(overlay.getSymbolColor());
+                                drawSymbol(x, y, symbol, symbolSize);
+                            }
                         }
                     }
                 }
