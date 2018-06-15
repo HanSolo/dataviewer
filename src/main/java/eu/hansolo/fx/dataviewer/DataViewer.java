@@ -21,6 +21,7 @@ import eu.hansolo.fx.dataviewer.ToolButton.Tool;
 import eu.hansolo.fx.dataviewer.event.DataViewerEvent;
 import eu.hansolo.fx.dataviewer.event.DataViewerEvent.Type;
 import eu.hansolo.fx.dataviewer.event.DataViewerEventListener;
+import eu.hansolo.fx.dataviewer.event.OverlayEventListener;
 import eu.hansolo.fx.dataviewer.font.Fonts;
 import eu.hansolo.fx.dataviewer.tools.CtxBounds;
 import eu.hansolo.fx.dataviewer.tools.CtxDimension;
@@ -248,6 +249,7 @@ public class DataViewer extends Region {
     private              ObjectProperty<Position>                       xAxisPosition;
     private              Position                                       _yAxisPosition;
     private              ObjectProperty<Position>                       yAxisPosition;
+    private              OverlayEventListener                           overlayListener;
 
 
     // ******************** Constructors **************************************
@@ -313,6 +315,7 @@ public class DataViewer extends Region {
         _xAxisPosition        = Position.BOTTOM;
         _yAxisPosition        = Position.LEFT;
         listeners             = new CopyOnWriteArrayList<>();
+        overlayListener       = e -> redraw();
 
         mouseHandler   = e -> {
             double    x         = e.getX();
@@ -1248,19 +1251,24 @@ public class DataViewer extends Region {
     public void setOverlays(final Overlay... OVERLAYS) { setOverlays(Arrays.asList(OVERLAYS)); }
     public void setOverlays(final List<Overlay> OVERLAYS) {
         overlays.clear();
-        OVERLAYS.forEach(overlay -> overlays.add(overlay));
+        OVERLAYS.forEach(overlay -> {
+            overlays.add(overlay);
+            overlay.setOnOverlayEvent(overlayListener);
+        });
         adjustToTimeBasedOverlays();
         redraw();
     }
     public void addOverlay(final Overlay OVERLAY) {
         if (overlays.contains(OVERLAY)) return;
         overlays.add(OVERLAY);
+        OVERLAY.setOnOverlayEvent(overlayListener);
         adjustToTimeBasedOverlays();
         redraw();
     }
     public void removeOverlay(final Overlay OVERLAY) {
         if (overlays.contains(OVERLAY)) {
             overlays.remove(OVERLAY);
+            OVERLAY.removeOverlayEventListener(overlayListener);
             redraw();
         }
     }
