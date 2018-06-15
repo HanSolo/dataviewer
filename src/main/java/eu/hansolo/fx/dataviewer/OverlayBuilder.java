@@ -123,6 +123,11 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
         return (B)this;
     }
 
+    public final B visible(final boolean VISIBLE) {
+        properties.put("visible", new SimpleBooleanProperty(VISIBLE));
+        return (B)this;
+    }
+
     public final B image(final Image IMAGE) {
         properties.put("image", new SimpleObjectProperty(IMAGE));
         return (B)this;
@@ -196,6 +201,8 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
                 CONTROL.setTimeBased(((BooleanProperty) properties.get(key)).get());
             } else if ("lineWidth".equals(key)) {
                 CONTROL.setLineWidth(((DoubleProperty) properties.get(key)).get());
+            } else if("visible".equals(key)) {
+                CONTROL.setVisible(((BooleanProperty) properties.get(key)).get());
             } else if ("image".equals(key)) {
                 CONTROL.setImage(((ObjectProperty<Image>) properties.get(key)).get());
             } else if ("imagePos".equals(key)) {

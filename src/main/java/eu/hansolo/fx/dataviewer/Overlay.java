@@ -80,6 +80,8 @@ public class Overlay {
     private ObjectProperty<Dimension2D>                imageSize;
     private Pos                                        _imageAnchor;
     private ObjectProperty<Pos>                        imageAnchor;
+    private boolean                                    _visible;
+    private BooleanProperty                            visible;
     private ObservableList<Pair<Double, Double>>       points;
     private CopyOnWriteArrayList<OverlayEventListener> listeners;
 
@@ -122,6 +124,7 @@ public class Overlay {
         _imagePos       = null == IMAGE_POS ? _imagePos = new Point2D(0, 0) : IMAGE_POS;
         _imageSize      = null == IMAGE ? new Dimension2D(0, 0) : new Dimension2D(IMAGE.getWidth(), IMAGE.getHeight());
         _imageAnchor    = Pos.CENTER;
+        _visible        = true;
         points          = FXCollections.observableArrayList();
         listeners       = new CopyOnWriteArrayList<>();
 
@@ -393,6 +396,26 @@ public class Overlay {
             _imageAnchor = null;
         }
         return imageAnchor;
+    }
+
+    public boolean isVisible() { return null == visible ? _visible : visible.get(); }
+    public void setVisible(final boolean VISIBLE) {
+        if (null == visible) {
+            _visible = VISIBLE;
+            fireOverlayEvent(UPDATE_EVENT);
+        } else {
+            visible.set(VISIBLE);
+        }
+    }
+    public BooleanProperty visibleProperty() {
+        if (null == visible) {
+            visible = new BooleanPropertyBase(_visible) {
+                @Override protected void invalidated() { fireOverlayEvent(UPDATE_EVENT); }
+                @Override public Object getBean() { return Overlay.this; }
+                @Override public String getName() { return "visible"; }
+            };
+        }
+        return visible;
     }
 
     public Dimension2D getImageSize() { return null == imageSize ? _imageSize : imageSize.get(); }
