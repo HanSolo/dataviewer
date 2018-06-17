@@ -43,7 +43,6 @@ import javafx.event.EventType;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
@@ -57,8 +56,6 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -2050,34 +2047,59 @@ public class DataViewer extends Region {
     private void drawSymbol(final double X, final double Y, final Symbol SYMBOL, final double SYMBOL_SIZE) {
         double halfSymbolSize = SYMBOL_SIZE * 0.5;
         switch(SYMBOL) {
+            case BOX:
+                ctxOverlays.strokeRect(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+                break;
+            case BOX_FILLED:
+                ctxOverlays.fillRect(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+                break;
             case CIRCLE:
                 ctxOverlays.strokeOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
                 break;
-            case SQUARE:
-                ctxOverlays.strokeRect(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
-                break;
-            case TRIANGLE:
-                ctxOverlays.strokeLine(X, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);
-                ctxOverlays.strokeLine(X + halfSymbolSize, Y + halfSymbolSize, X - halfSymbolSize, Y + halfSymbolSize);
-                ctxOverlays.strokeLine(X - halfSymbolSize, Y + halfSymbolSize, X, Y - halfSymbolSize);
+            case CIRCLE_FILLED:
+                ctxOverlays.fillOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
                 break;
             case CROSS:
                 ctxOverlays.strokeLine(X - halfSymbolSize, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);
                 ctxOverlays.strokeLine(X - halfSymbolSize, Y + halfSymbolSize, X + halfSymbolSize, Y - halfSymbolSize);
                 break;
-            case FILLED_CIRCLE:
-                ctxOverlays.fillOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+            case PLUS:
+                ctxOverlays.strokeLine(X - halfSymbolSize, Y, X + halfSymbolSize, Y);
+                ctxOverlays.strokeLine(X, Y - halfSymbolSize, X, Y + halfSymbolSize);
                 break;
-            case FILLED_SQUARE:
-                ctxOverlays.fillRect(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+            case STAR:
+                drawStar(ctxOverlays, X, Y,5, halfSymbolSize,halfSymbolSize * 0.4);
+                ctxOverlays.stroke();
                 break;
-            case FILLED_TRIANGLE: // Slower than the others!!!
+            case STAR_FILLED:
+                drawStar(ctxOverlays, X, Y,5, SYMBOL_SIZE * 0.75,SYMBOL_SIZE * 0.3);
+                ctxOverlays.fill();
+                break;
+            case TRIANGLE_UP:
+                ctxOverlays.strokeLine(X, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.strokeLine(X + halfSymbolSize, Y + halfSymbolSize, X - halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.strokeLine(X - halfSymbolSize, Y + halfSymbolSize, X, Y - halfSymbolSize);
+                break;
+            case TRIANGLE_UP_FILLED:
                 ctxOverlays.beginPath();
                 ctxOverlays.moveTo(X, Y - halfSymbolSize);
                 ctxOverlays.lineTo(X + halfSymbolSize, Y + halfSymbolSize);
-                ctxOverlays.lineTo(X + halfSymbolSize, Y + halfSymbolSize);
                 ctxOverlays.lineTo(X - halfSymbolSize, Y + halfSymbolSize);
-                ctxOverlays.lineTo(X - halfSymbolSize, Y + halfSymbolSize);
+                ctxOverlays.lineTo(X, Y - halfSymbolSize);
+                ctxOverlays.closePath();
+                ctxOverlays.fill();
+                break;
+            case TRIANGLE_DOWN:
+                ctxOverlays.strokeLine(X, Y + halfSymbolSize, X - halfSymbolSize, Y - halfSymbolSize);
+                ctxOverlays.strokeLine(X - halfSymbolSize, Y - halfSymbolSize, X + halfSymbolSize, Y - halfSymbolSize);
+                ctxOverlays.strokeLine(X + halfSymbolSize, Y - halfSymbolSize, X, Y + halfSymbolSize);
+                break;
+            case TRIANGLE_DOWN_FILLED:
+                ctxOverlays.beginPath();
+                ctxOverlays.moveTo(X, Y + halfSymbolSize);
+                ctxOverlays.lineTo(X - halfSymbolSize, Y - halfSymbolSize);
+                ctxOverlays.lineTo(X + halfSymbolSize, Y - halfSymbolSize);
+                ctxOverlays.lineTo(X , Y + halfSymbolSize);
                 ctxOverlays.closePath();
                 ctxOverlays.fill();
                 break;
@@ -2085,6 +2107,29 @@ public class DataViewer extends Region {
             default  :
                 break;
         }
+    }
+
+    private void drawStar(final GraphicsContext CTX, final double CENTER_X, final double CENTER_Y, final int SPIKES, final double OUTER_RADIUS, final double INNER_RADIUS) {
+        double rot = Math.PI / 2 * 3;
+        double x;
+        double y;
+        double step=Math.PI/SPIKES;
+
+        CTX.beginPath();
+        CTX.moveTo(CENTER_X,CENTER_Y - OUTER_RADIUS);
+        for(int i = 0 ; i < SPIKES ; i++){
+            x = CENTER_X + Math.cos(rot) * OUTER_RADIUS;
+            y = CENTER_Y + Math.sin(rot) * OUTER_RADIUS;
+            CTX.lineTo(x,y);
+            rot += step;
+
+            x = CENTER_X + Math.cos(rot) * INNER_RADIUS;
+            y = CENTER_Y + Math.sin(rot) * INNER_RADIUS;
+            CTX.lineTo(x,y);
+            rot += step;
+        }
+        CTX.lineTo(CENTER_X,CENTER_Y - OUTER_RADIUS);
+        CTX.closePath();
     }
 
     private void drawCrossHair(final double X, final double Y) {

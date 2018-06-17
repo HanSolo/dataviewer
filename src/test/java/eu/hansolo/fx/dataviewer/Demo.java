@@ -19,10 +19,8 @@ package eu.hansolo.fx.dataviewer;
 
 import eu.hansolo.fx.dataviewer.Overlay.Symbol;
 import javafx.application.Application;
-import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
@@ -57,7 +55,7 @@ public class Demo extends Application {
                                           .stroke(Color.LIME)
                                           .fill(Color.rgb(0, 255, 0, 0.5))
                                           .symbolColor(Color.YELLOW)
-                                          .symbol(Symbol.FILLED_CIRCLE)
+                                          .symbol(Symbol.TRIANGLE_DOWN_FILLED)
                                           .doStroke(true)
                                           .doFill(false)
                                           //.timeBased(true)
@@ -69,7 +67,7 @@ public class Demo extends Application {
                                           .xyPairs(xyPairs2)
                                           .stroke(Color.MAGENTA)
                                           .symbolColor(Color.rgb(0, 200, 200))
-                                          .symbol(Symbol.FILLED_SQUARE)
+                                          .symbol(Symbol.STAR_FILLED)
                                           .doStroke(true)
                                           .doFill(false)
                                           .lineWidth(2)
@@ -110,7 +108,7 @@ public class Demo extends Application {
                                         .fill(Color.rgb(0, 150, 250, 0.5))
                                         .stroke(Color.rgb(0, 150, 250))
                                         .symbolColor(Color.TRANSPARENT)
-                                        .symbol(Symbol.FILLED_SQUARE)
+                                        .symbol(Symbol.TRIANGLE_UP)
                                         .symbolsVisible(false)
                                         .doStroke(false)
                                         .doFill(true)

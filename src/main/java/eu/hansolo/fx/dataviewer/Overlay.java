@@ -46,7 +46,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class Overlay {
-    public enum Symbol { NONE, CIRCLE, SQUARE, TRIANGLE, CROSS, FILLED_CIRCLE, FILLED_SQUARE, FILLED_TRIANGLE }
+    public enum Symbol { NONE, PLUS, CROSS, STAR, STAR_FILLED, BOX, BOX_FILLED, CIRCLE, CIRCLE_FILLED, TRIANGLE_UP, TRIANGLE_UP_FILLED, TRIANGLE_DOWN, TRIANGLE_DOWN_FILLED }
     public  static final Paint        DEFAULT_FILL         = Color.rgb(128, 128,128, 0.5);
     public  static final Color        DEFAULT_STROKE       = Color.rgb(128, 128, 128);
     public  static final Color        DEFAULT_SYMBOL_COLOR = Color.rgb(128, 128, 128);
