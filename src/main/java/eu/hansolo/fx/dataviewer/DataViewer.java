@@ -1262,6 +1262,20 @@ public class DataViewer extends Region {
         adjustToTimeBasedOverlays();
         redraw();
     }
+    public void addOverlay(int index, final Overlay OVERLAY) {
+        if (overlays.contains(OVERLAY)) return;
+        overlays.add(index, OVERLAY);
+        OVERLAY.setOnOverlayEvent(overlayListener);
+        adjustToTimeBasedOverlays();
+        redraw();
+    }
+    public void setOverlay(int index, final Overlay OVERLAY) {
+        if (overlays.contains(OVERLAY)) return;
+        overlays.set(index, OVERLAY);
+        OVERLAY.setOnOverlayEvent(overlayListener);
+        adjustToTimeBasedOverlays();
+        redraw();
+    }
     public void removeOverlay(final Overlay OVERLAY) {
         if (overlays.contains(OVERLAY)) {
             overlays.remove(OVERLAY);
