@@ -65,6 +65,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -1979,6 +1981,7 @@ public class DataViewer extends Region {
         double stepY       = chartHeight / yAxis.getRange();
 
         ctxOverlays.clearRect(0, 0, chartWidth, chartHeight);
+        ctxOverlays.setLineCap(StrokeLineCap.BUTT);
         overlays.forEach(overlay -> {
             if (overlay.isVisible()) {
                 if (null != overlay.getImage()) {
@@ -2034,8 +2037,16 @@ public class DataViewer extends Region {
                             ctxOverlays.fill();
                         }
                         if (doStroke) {
-                            ctxOverlays.setLineWidth(overlay.getLineWidth());
                             ctxOverlays.setStroke(overlay.getStroke());
+                            ctxOverlays.setLineWidth(overlay.getLineWidth());
+                            switch(overlay.getLineStyle()) {
+                                case EMPTY      : ctxOverlays.setStroke(Color.TRANSPARENT); break;
+                                case DASHED     : ctxOverlays.setLineDashes(overlay.getLineWidth() * 3); break;
+                                case DOTTED     : ctxOverlays.setLineDashes(overlay.getLineWidth()); break;
+                                case DASH_DOTTED: ctxOverlays.setLineDashes(overlay.getLineWidth() * 3, overlay.getLineWidth() * 3, overlay.getLineWidth(), overlay.getLineWidth() * 3); break;
+                                case SOLID      :
+                                default         : ctxOverlays.setLineDashes(null);
+                            }
                             ctxOverlays.stroke();
                         }
 
@@ -2072,6 +2083,12 @@ public class DataViewer extends Region {
                 break;
             case CIRCLE_FILLED:
                 ctxOverlays.fillOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
+                break;
+            case ELLIPSE:
+                ctxOverlays.strokeOval(X - halfSymbolSize, Y - halfSymbolSize * 0.5, SYMBOL_SIZE, halfSymbolSize);
+                break;
+            case ELLIPSE_FILLED:
+                ctxOverlays.fillOval(X - halfSymbolSize, Y - halfSymbolSize * 0.5, SYMBOL_SIZE, halfSymbolSize);
                 break;
             case CROSS:
                 ctxOverlays.strokeLine(X - halfSymbolSize, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);

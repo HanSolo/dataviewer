@@ -46,7 +46,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class Overlay {
-    public enum Symbol { NONE, PLUS, CROSS, STAR, STAR_FILLED, BOX, BOX_FILLED, CIRCLE, CIRCLE_FILLED, TRIANGLE_UP, TRIANGLE_UP_FILLED, TRIANGLE_DOWN, TRIANGLE_DOWN_FILLED }
+    public enum Symbol { NONE, PLUS, CROSS, STAR, STAR_FILLED, BOX, BOX_FILLED, CIRCLE, CIRCLE_FILLED, ELLIPSE, ELLIPSE_FILLED, TRIANGLE_UP, TRIANGLE_UP_FILLED, TRIANGLE_DOWN, TRIANGLE_DOWN_FILLED }
+    public enum LineStyle {
+        EMPTY(0),
+        SOLID(1),
+        DASHED(2),
+        DOTTED(3),
+        DASH_DOTTED(4);
+
+        private final int id;
+
+        // ******************** Constructors **********************************
+        LineStyle(final int ID) {
+            id = ID;
+        }
+
+
+        // ******************** Methods ***************************************
+        public int getId() { return id; }
+    }
     public  static final Paint        DEFAULT_FILL         = Color.rgb(128, 128,128, 0.5);
     public  static final Color        DEFAULT_STROKE       = Color.rgb(128, 128, 128);
     public  static final Color        DEFAULT_SYMBOL_COLOR = Color.rgb(128, 128, 128);
@@ -73,6 +91,8 @@ public class Overlay {
     private BooleanProperty                            timeBased;
     private double                                     _lineWidth;
     private DoubleProperty                             lineWidth;
+    private LineStyle                                  _lineStyle;
+    private ObjectProperty<LineStyle>                  lineStyle;
     private Image                                      image;
     private Point2D                                    _imagePos;
     private ObjectProperty<Point2D>                    imagePos;
@@ -110,6 +130,11 @@ public class Overlay {
     public Overlay(final Image IMAGE, final Point2D IMAGE_POS, final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
                    final double LINE_WIDTH, final List<Pair<Double, Double>> POINTS) {
+        this(IMAGE, IMAGE_POS, NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, LineStyle.SOLID, POINTS);
+    }
+    public Overlay(final Image IMAGE, final Point2D IMAGE_POS, final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
+                   final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
+                   final double LINE_WIDTH, final LineStyle LINE_STYLE, final List<Pair<Double, Double>> POINTS) {
         _name           = NAME;
         _doFill         = DO_FILL;
         _doStroke       = DO_STROKE;
@@ -120,6 +145,7 @@ public class Overlay {
         _symbol         = SYMBOL;
         _timeBased      = TIME_BASED;
         _lineWidth      = Helper.clamp(0.1, 10, LINE_WIDTH);
+        _lineStyle      = LINE_STYLE;
         image           = IMAGE;
         _imagePos       = null == IMAGE_POS ? _imagePos = new Point2D(0, 0) : IMAGE_POS;
         _imageSize      = null == IMAGE ? new Dimension2D(0, 0) : new Dimension2D(IMAGE.getWidth(), IMAGE.getHeight());
@@ -340,6 +366,27 @@ public class Overlay {
             };
         }
         return lineWidth;
+    }
+
+    public LineStyle getLineStyle() { return null == lineStyle ? _lineStyle : lineStyle.get(); }
+    public void setLineStyle(final LineStyle LINE_STYLE) {
+        if (null == lineStyle) {
+            _lineStyle = LINE_STYLE;
+            fireOverlayEvent(UPDATE_EVENT);
+        } else {
+            lineStyle.set(LINE_STYLE);
+        }
+    }
+    public ObjectProperty<LineStyle> lineStyleProperty() {
+        if (null == lineStyle) {
+            lineStyle = new ObjectPropertyBase<LineStyle>(_lineStyle) {
+                @Override protected void invalidated() { fireOverlayEvent(UPDATE_EVENT); }
+                @Override public Object getBean() { return Overlay.this; }
+                @Override public String getName() { return "lineStyle"; }
+            };
+            _lineStyle = null;
+        }
+        return lineStyle;
     }
 
     public Image getImage() { return image; }

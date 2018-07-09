@@ -16,6 +16,7 @@
 
 package eu.hansolo.fx.dataviewer;
 
+import eu.hansolo.fx.dataviewer.Overlay.LineStyle;
 import eu.hansolo.fx.dataviewer.Overlay.Symbol;
 import eu.hansolo.fx.dataviewer.event.OverlayEventListener;
 import eu.hansolo.fx.dataviewer.tools.Helper;
@@ -135,6 +136,11 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
         return (B)this;
     }
 
+    public final B lineStyle(final LineStyle LINE_STYLE) {
+        properties.put("lineStyle", new SimpleObjectProperty(LINE_STYLE));
+        return (B)this;
+    }
+
     public final B visible(final boolean VISIBLE) {
         properties.put("visible", new SimpleBooleanProperty(VISIBLE));
         return (B)this;
@@ -219,6 +225,8 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
                 CONTROL.setTimeBased(((BooleanProperty) properties.get(key)).get());
             } else if ("lineWidth".equals(key)) {
                 CONTROL.setLineWidth(((DoubleProperty) properties.get(key)).get());
+            } else if ("lineStyle".equals(key)) {
+                CONTROL.setLineStyle(((ObjectProperty<LineStyle>) properties.get(key)).get());
             } else if("visible".equals(key)) {
                 CONTROL.setVisible(((BooleanProperty) properties.get(key)).get());
             } else if ("image".equals(key)) {

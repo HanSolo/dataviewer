@@ -17,6 +17,7 @@
 package eu.hansolo.fx.dataviewer;
 
 
+import eu.hansolo.fx.dataviewer.Overlay.LineStyle;
 import eu.hansolo.fx.dataviewer.Overlay.Symbol;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -50,16 +51,16 @@ public class Demo extends Application {
 
         String xyPairs1  = "1.0,1.0, 1.1,1.07, 1.2,1.17, 1.3,1.22, 1.4,1.29, 1.5,1.29, 1.6,1.31, 1.7,1.42, 1.8,1.56, 1.9,1.69, 2.0,1.85";
         Overlay overlay1 = OverlayBuilder.create()
-                                          .name("CoastLine")
-                                          .xyPairs(xyPairs1)
-                                          .stroke(Color.LIME)
-                                          .fill(Color.rgb(0, 255, 0, 0.5))
-                                          .symbolColor(Color.YELLOW)
-                                          .symbol(Symbol.TRIANGLE_DOWN_FILLED)
-                                          .doStroke(true)
-                                          .doFill(false)
-                                          //.timeBased(true)
-                                          .build();
+                                         .name("CoastLine")
+                                         .xyPairs(xyPairs1)
+                                         .stroke(Color.LIME)
+                                         .fill(Color.rgb(0, 255, 0, 0.5))
+                                         .symbolColor(Color.YELLOW)
+                                         .symbol(Symbol.ELLIPSE_FILLED)
+                                         .doStroke(true)
+                                         .doFill(false)
+                                         //.timeBased(true)
+                                         .build();
 
         String xyPairs2  = "1.066,1.115, 1.1,1.2, 1.2,1.1, 1.3,1.15, 1.4,1.20, 1.5,1.23, 1.6,1.4, 1.7,1.34, 1.8,1.45, 1.9,1.52, 2.0,1.7";
         Overlay overlay2  = OverlayBuilder.create()
@@ -71,6 +72,7 @@ public class Demo extends Application {
                                           .doStroke(true)
                                           .doFill(false)
                                           .lineWidth(2)
+                                          .lineStyle(LineStyle.DASH_DOTTED)
                                           //.timeBased(true)
                                           .build();
 
