@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.LinkedList;
+import java.util.List;
 
 
 public class Helper {
@@ -169,6 +170,25 @@ public class Helper {
         if (length % 2 != 0) { throw new IllegalArgumentException("XYPairs must contain an equal number of x,y coordinates"); }
         for (int i = 1 ; i < length ; i+=2) {
             points.add(new Pair<>(Double.valueOf(pointsArray[i - 1]), Double.valueOf(pointsArray[i])));
+        }
+        return points;
+    }
+
+    public static final List<Pair<Double,Double>> convertXYPairsToList(final Double[][] XY_PAIRS) {
+        LinkedList<Pair<Double,Double>> points = new LinkedList<>();
+        for (int i = 0 ; i < XY_PAIRS.length ; i++) {
+            if (XY_PAIRS.length != 0) { throw new IllegalArgumentException("XYPairs must contain an equal number of x,y coordinates"); }
+            points.add(new Pair<>(XY_PAIRS[i][0], XY_PAIRS[i][1]));
+        }
+        return points;
+    }
+
+    public static final List<Pair<Double,Double>> convertXYPairsToList(final List<Double[]> XY_PAIRS) {
+        LinkedList<Pair<Double,Double>> points = new LinkedList<>();
+        int      length      = XY_PAIRS.size();
+        if (length % 2 != 0) { throw new IllegalArgumentException("XYPairs must contain an equal number of x,y coordinates"); }
+        for (int i = 0 ; i < length ; i++) {
+            points.add(new Pair<>(XY_PAIRS.get(i)[0], XY_PAIRS.get(i)[1]));
         }
         return points;
     }

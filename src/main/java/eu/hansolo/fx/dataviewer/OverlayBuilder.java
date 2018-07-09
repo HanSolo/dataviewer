@@ -39,6 +39,8 @@ import javafx.util.Pair;
 import java.util.HashMap;
 import java.util.List;
 
+import static eu.hansolo.fx.dataviewer.tools.Helper.convertXYPairsToList;
+
 
 /**
  * User: hansolo
@@ -70,6 +72,16 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
 
     public final B points(final List<Double[]> POINTS) {
         properties.put("pointsList", new SimpleObjectProperty<>(POINTS));
+        return (B) this;
+    }
+
+    public final B pairedPoints(final Pair<Double,Double>... POINTS) {
+        properties.put("pairedPointsArray", new SimpleObjectProperty<>(POINTS));
+        return (B) this;
+    }
+
+    public final B pairedPoints(final List<Pair<Double,Double>> POINTS) {
+        properties.put("pairedPointsList", new SimpleObjectProperty<>(POINTS));
         return (B) this;
     }
 
@@ -162,10 +174,16 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
         final Overlay CONTROL = new Overlay();
 
         if (properties.keySet().contains("pointsArray")) {
-            CONTROL.setPoints(((ObjectProperty<Pair<Double,Double>[]>) properties.get("pointsArray")).get());
+            CONTROL.setPoints(convertXYPairsToList(((ObjectProperty<Double[][]>) properties.get("pointsArray")).get()));
         }
         if (properties.keySet().contains("pointsList")) {
-            CONTROL.setPoints(((ObjectProperty<List<Pair<Double,Double>>>) properties.get("pointsList")).get());
+            CONTROL.setPoints(convertXYPairsToList(((ObjectProperty<List<Double[]>>) properties.get("pointsList")).get()));
+        }
+        if (properties.keySet().contains("pairedPointsArray")) {
+            CONTROL.setPoints(((ObjectProperty<Pair<Double,Double>[]>) properties.get("pairedPointsArray")).get());
+        }
+        if (properties.keySet().contains("pairedPointsList")) {
+            CONTROL.setPoints(((ObjectProperty<List<Pair<Double,Double>>>) properties.get("pairedPointsList")).get());
         }
 
         if (properties.keySet().contains("listenersArray")) {
@@ -179,7 +197,7 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
 
         for (String key : properties.keySet()) {
             if ("xyPairs".equals(key)) {
-                List<Pair<Double,Double>> points = Helper.convertXYPairsToList(((StringProperty) properties.get(key)).get());
+                List<Pair<Double,Double>> points = convertXYPairsToList(((StringProperty) properties.get(key)).get());
                 CONTROL.setPoints(points);
             } else if ("name".equals(key)) {
                 CONTROL.setName(((StringProperty) properties.get(key)).get());
