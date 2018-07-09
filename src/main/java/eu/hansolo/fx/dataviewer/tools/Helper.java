@@ -186,7 +186,6 @@ public class Helper {
     public static final List<Pair<Double,Double>> convertXYPairsToList(final List<Double[]> XY_PAIRS) {
         LinkedList<Pair<Double,Double>> points = new LinkedList<>();
         int      length      = XY_PAIRS.size();
-        if (length % 2 != 0) { throw new IllegalArgumentException("XYPairs must contain an equal number of x,y coordinates"); }
         for (int i = 0 ; i < length ; i++) {
             points.add(new Pair<>(XY_PAIRS.get(i)[0], XY_PAIRS.get(i)[1]));
         }
