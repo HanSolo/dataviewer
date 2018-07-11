@@ -36,9 +36,9 @@ import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Shape;
 import javafx.util.Pair;
 
-import java.rmi.UnmarshalException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +46,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class Overlay {
-    public enum Symbol { NONE, PLUS, CROSS, STAR, STAR_FILLED, BOX, BOX_FILLED, CIRCLE, CIRCLE_FILLED, ELLIPSE, ELLIPSE_FILLED, TRIANGLE_UP, TRIANGLE_UP_FILLED, TRIANGLE_DOWN, TRIANGLE_DOWN_FILLED }
+    public enum Symbol { NONE, PLUS, CROSS, STAR, STAR_FILLED, BOX, BOX_FILLED, CIRCLE, CIRCLE_FILLED, TRIANGLE_UP, TRIANGLE_UP_FILLED, TRIANGLE_DOWN, TRIANGLE_DOWN_FILLED }
     public enum LineStyle {
         EMPTY(0),
         SOLID(1),
@@ -93,6 +93,7 @@ public class Overlay {
     private DoubleProperty                             lineWidth;
     private LineStyle                                  _lineStyle;
     private ObjectProperty<LineStyle>                  lineStyle;
+    private Shape                                      shape;
     private Image                                      image;
     private Point2D                                    _imagePos;
     private ObjectProperty<Point2D>                    imagePos;
@@ -108,31 +109,51 @@ public class Overlay {
 
     // ******************** Constructors **************************************
     public Overlay() {
-        this(null, new Point2D(0, 0), "", false, true, true,
+        this(null, null, new Point2D(0, 0), "", false, true, true,
              DEFAULT_FILL, DEFAULT_STROKE, DEFAULT_SYMBOL_COLOR, DEFAULT_SYMBOL,false,
-             1.0, new ArrayList<>());
+             1.0, LineStyle.SOLID, new ArrayList<>());
     }
     public Overlay(final Image IMAGE, final Point2D IMAGE_POS) {
-        this(IMAGE, IMAGE_POS, "", false, true, true,
+        this(null, IMAGE, IMAGE_POS, "", false, true, true,
              DEFAULT_FILL, DEFAULT_STROKE, DEFAULT_SYMBOL_COLOR, DEFAULT_SYMBOL,false,
-             1.0, new ArrayList<>());
+             1.0, LineStyle.SOLID, new ArrayList<>());
+    }
+    public Overlay(final Shape SHAPE) {
+        this(SHAPE, null, new Point2D(0, 0), "", false, true, true,
+             DEFAULT_FILL, DEFAULT_STROKE, DEFAULT_SYMBOL_COLOR, DEFAULT_SYMBOL,false,
+             1.0, LineStyle.SOLID, new ArrayList<>());
     }
     public Overlay(final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
                    final double LINE_WIDTH, final Pair<Double, Double>... POINTS) {
-        this(null, new Point2D(0, 0), NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, Arrays.asList(POINTS));
+        this(null, null, new Point2D(0, 0), NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, LineStyle.SOLID, Arrays.asList(POINTS));
     }
     public Overlay(final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
                    final double LINE_WIDTH, final List<Pair<Double, Double>> POINTS) {
-        this(null, new Point2D(0, 0), NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, POINTS);
+        this(null, null, new Point2D(0, 0), NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, LineStyle.SOLID, POINTS);
+    }
+    public Overlay(final Shape SHAPE, final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
+                   final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
+                   final double LINE_WIDTH, final List<Pair<Double, Double>> POINTS) {
+        this(SHAPE, null, new Point2D(0, 0), NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, LineStyle.SOLID, POINTS);
+    }
+    public Overlay(final Shape SHAPE, final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
+                   final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
+                   final double LINE_WIDTH, final LineStyle LINE_STYLE, final List<Pair<Double, Double>> POINTS) {
+        this(SHAPE, null, new Point2D(0, 0), NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, LINE_STYLE, POINTS);
     }
     public Overlay(final Image IMAGE, final Point2D IMAGE_POS, final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
                    final double LINE_WIDTH, final List<Pair<Double, Double>> POINTS) {
-        this(IMAGE, IMAGE_POS, NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, LineStyle.SOLID, POINTS);
+        this(null, IMAGE, IMAGE_POS, NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, LineStyle.SOLID, POINTS);
     }
     public Overlay(final Image IMAGE, final Point2D IMAGE_POS, final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
+                   final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
+                   final double LINE_WIDTH, final LineStyle LINE_STYLE, final List<Pair<Double, Double>> POINTS) {
+        this(null, IMAGE, IMAGE_POS, NAME, DO_FILL, DO_STROKE, SYMBOLS_VISIBLE, FILL, STROKE, SYMBOL_COLOR, SYMBOL, TIME_BASED, LINE_WIDTH, LINE_STYLE, POINTS);
+    }
+    public Overlay(final Shape SHAPE, final Image IMAGE, final Point2D IMAGE_POS, final String NAME, final boolean DO_FILL, final boolean DO_STROKE, final boolean SYMBOLS_VISIBLE,
                    final Paint FILL, final Color STROKE, final Color SYMBOL_COLOR, final Symbol SYMBOL, final boolean TIME_BASED,
                    final double LINE_WIDTH, final LineStyle LINE_STYLE, final List<Pair<Double, Double>> POINTS) {
         _name           = NAME;
@@ -146,6 +167,7 @@ public class Overlay {
         _timeBased      = TIME_BASED;
         _lineWidth      = Helper.clamp(0.1, 10, LINE_WIDTH);
         _lineStyle      = LINE_STYLE;
+        shape           = SHAPE;
         image           = IMAGE;
         _imagePos       = null == IMAGE_POS ? _imagePos = new Point2D(0, 0) : IMAGE_POS;
         _imageSize      = null == IMAGE ? new Dimension2D(0, 0) : new Dimension2D(IMAGE.getWidth(), IMAGE.getHeight());
@@ -389,11 +411,17 @@ public class Overlay {
         return lineStyle;
     }
 
+    public Shape getShape() { return shape; }
+    public void setShape(final Shape SHAPE) {
+        shape = SHAPE;
+        fireOverlayEvent(UPDATE_EVENT);
+    }
+
     public Image getImage() { return image; }
     public void setImage(final Image IMAGE) {
         image = IMAGE;
         if (null != IMAGE && (Double.compare(getImageSize().getWidth(), 0) == 0 ||
-            Double.compare(getImageSize().getHeight(), 0) == 0)) {
+                              Double.compare(getImageSize().getHeight(), 0) == 0)) {
             setImageSize(new Dimension2D(image.getWidth(), image.getHeight()));
         }
         fireOverlayEvent(UPDATE_EVENT);

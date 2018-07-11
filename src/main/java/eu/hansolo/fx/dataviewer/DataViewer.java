@@ -26,6 +26,7 @@ import eu.hansolo.fx.dataviewer.font.Fonts;
 import eu.hansolo.fx.dataviewer.tools.CtxBounds;
 import eu.hansolo.fx.dataviewer.tools.CtxDimension;
 import eu.hansolo.fx.dataviewer.tools.Helper;
+import eu.hansolo.fx.dataviewer.tools.ShapeConverter;
 import javafx.beans.DefaultProperty;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.BooleanPropertyBase;
@@ -65,8 +66,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeLineCap;
-import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -1984,6 +1985,65 @@ public class DataViewer extends Region {
         ctxOverlays.setLineCap(StrokeLineCap.BUTT);
         overlays.forEach(overlay -> {
             if (overlay.isVisible()) {
+                ctxOverlays.setFill(overlay.getFill());
+
+                ctxOverlays.setStroke(overlay.getStroke());
+                ctxOverlays.setLineWidth(overlay.getLineWidth());
+                switch(overlay.getLineStyle()) {
+                    case EMPTY      : ctxOverlays.setStroke(Color.TRANSPARENT); break;
+                    case DASHED     : ctxOverlays.setLineDashes(overlay.getLineWidth() * 3); break;
+                    case DOTTED     : ctxOverlays.setLineDashes(overlay.getLineWidth()); break;
+                    case DASH_DOTTED: ctxOverlays.setLineDashes(overlay.getLineWidth() * 3, overlay.getLineWidth() * 3, overlay.getLineWidth(), overlay.getLineWidth() * 3); break;
+                    case SOLID      :
+                    default         : ctxOverlays.setLineDashes(null);
+                }
+
+                List<Pair<Double, Double>> points     = overlay.getPoints();
+                int                        noOfPoints = points.size();
+                if (noOfPoints > 0) {
+                    Symbol               symbol   = overlay.getSymbol();
+                    boolean              doFill   = overlay.isDoFill();
+                    boolean              doStroke = overlay.isDoStroke();
+                    double               x        = (points.get(0).getKey() - minX) * stepX;
+                    double               y        = chartHeight - (points.get(0).getValue() - minY) * stepY;
+                    Pair<Double, Double> point;
+
+                    ctxOverlays.beginPath();
+                    ctxOverlays.moveTo(x, y);
+                    for (int i = 1; i < noOfPoints; i++) {
+                        point = points.get(i);
+                        x = (point.getKey() - minX) * stepX;
+                        y = chartHeight - (point.getValue() - minY) * stepY;
+                        if (doFill || doStroke) {
+                            ctxOverlays.lineTo(x, y);
+                        }
+                    }
+                    if (doFill) {
+                        ctxOverlays.closePath();
+                        ctxOverlays.fill();
+                    }
+                    if (doStroke) { ctxOverlays.stroke(); }
+
+                    // Draw symbols
+                    if (overlay.isSymbolsVisible()) {
+                        ctxOverlays.setLineWidth(1);
+                        for (int i = 0; i < noOfPoints; i++) {
+                            point = points.get(i);
+                            x = (point.getKey() - minX) * stepX;
+                            y = chartHeight - (point.getValue() - minY) * stepY;
+
+                            ctxOverlays.setStroke(overlay.getSymbolColor());
+                            ctxOverlays.setFill(overlay.getSymbolColor());
+                            drawSymbol(x, y, symbol, symbolSize);
+                        }
+                    }
+                }
+
+                if (null != overlay.getShape()) {
+                    Shape shape = overlay.getShape();
+                    ShapeConverter.drawShapeToCtx(shape, minX, minY, stepX, stepY, ctxOverlays, overlay.isDoFill() ? overlay.getFill() : Color.TRANSPARENT, overlay.isDoStroke() ? overlay.getStroke() : Color.TRANSPARENT);
+                }
+
                 if (null != overlay.getImage()) {
                     Image  image  = overlay.getImage();
                     double imageX = (overlay.getImagePos().getX() - minX) * stepX;
@@ -2010,60 +2070,6 @@ public class DataViewer extends Region {
                             break;
                     }
                     ctxOverlays.drawImage(image, imageX ,imageY, imageW, imageH);
-                } else {
-                    List<Pair<Double, Double>> points     = overlay.getPoints();
-                    int                        noOfPoints = points.size();
-                    if (noOfPoints > 0) {
-                        Symbol               symbol   = overlay.getSymbol();
-                        boolean              doFill   = overlay.isDoFill();
-                        boolean              doStroke = overlay.isDoStroke();
-                        double               x        = (points.get(0).getKey() - minX) * stepX;
-                        double               y        = chartHeight - (points.get(0).getValue() - minY) * stepY;
-                        Pair<Double, Double> point;
-
-                        ctxOverlays.beginPath();
-                        ctxOverlays.moveTo(x, y);
-                        for (int i = 1; i < noOfPoints; i++) {
-                            point = points.get(i);
-                            x = (point.getKey() - minX) * stepX;
-                            y = chartHeight - (point.getValue() - minY) * stepY;
-                            if (doFill || doStroke) {
-                                ctxOverlays.lineTo(x, y);
-                            }
-                        }
-                        if (doFill) {
-                            ctxOverlays.setFill(overlay.getFill());
-                            ctxOverlays.closePath();
-                            ctxOverlays.fill();
-                        }
-                        if (doStroke) {
-                            ctxOverlays.setStroke(overlay.getStroke());
-                            ctxOverlays.setLineWidth(overlay.getLineWidth());
-                            switch(overlay.getLineStyle()) {
-                                case EMPTY      : ctxOverlays.setStroke(Color.TRANSPARENT); break;
-                                case DASHED     : ctxOverlays.setLineDashes(overlay.getLineWidth() * 3); break;
-                                case DOTTED     : ctxOverlays.setLineDashes(overlay.getLineWidth()); break;
-                                case DASH_DOTTED: ctxOverlays.setLineDashes(overlay.getLineWidth() * 3, overlay.getLineWidth() * 3, overlay.getLineWidth(), overlay.getLineWidth() * 3); break;
-                                case SOLID      :
-                                default         : ctxOverlays.setLineDashes(null);
-                            }
-                            ctxOverlays.stroke();
-                        }
-
-                        // Draw symbols
-                        if (overlay.isSymbolsVisible()) {
-                            ctxOverlays.setLineWidth(1);
-                            for (int i = 0; i < noOfPoints; i++) {
-                                point = points.get(i);
-                                x = (point.getKey() - minX) * stepX;
-                                y = chartHeight - (point.getValue() - minY) * stepY;
-
-                                ctxOverlays.setStroke(overlay.getSymbolColor());
-                                ctxOverlays.setFill(overlay.getSymbolColor());
-                                drawSymbol(x, y, symbol, symbolSize);
-                            }
-                        }
-                    }
                 }
             }
         });
@@ -2083,12 +2089,6 @@ public class DataViewer extends Region {
                 break;
             case CIRCLE_FILLED:
                 ctxOverlays.fillOval(X - halfSymbolSize, Y - halfSymbolSize, SYMBOL_SIZE, SYMBOL_SIZE);
-                break;
-            case ELLIPSE:
-                ctxOverlays.strokeOval(X - halfSymbolSize, Y - halfSymbolSize * 0.5, SYMBOL_SIZE, halfSymbolSize);
-                break;
-            case ELLIPSE_FILLED:
-                ctxOverlays.fillOval(X - halfSymbolSize, Y - halfSymbolSize * 0.5, SYMBOL_SIZE, halfSymbolSize);
                 break;
             case CROSS:
                 ctxOverlays.strokeLine(X - halfSymbolSize, Y - halfSymbolSize, X + halfSymbolSize, Y + halfSymbolSize);

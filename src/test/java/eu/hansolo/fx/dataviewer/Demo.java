@@ -27,6 +27,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Ellipse;
 import javafx.stage.Stage;
 
 
@@ -49,6 +50,14 @@ public class Demo extends Application {
                                              //.imageSize(new Dimension2D(30, 30))
                                              .build();
 
+        Overlay shapeOverlay = OverlayBuilder.create()
+                                             .name("Shape")
+                                             .fill(Color.rgb(255, 0, 0, 0.5))
+                                             .doFill(true)
+                                             .doStroke(false)
+                                             .shape(new Ellipse(1.5, 1.5, 0.25, 0.125))
+                                             .build();
+
         String xyPairs1  = "1.0,1.0, 1.1,1.07, 1.2,1.17, 1.3,1.22, 1.4,1.29, 1.5,1.29, 1.6,1.31, 1.7,1.42, 1.8,1.56, 1.9,1.69, 2.0,1.85";
         Overlay overlay1 = OverlayBuilder.create()
                                          .name("CoastLine")
@@ -56,7 +65,7 @@ public class Demo extends Application {
                                          .stroke(Color.LIME)
                                          .fill(Color.rgb(0, 255, 0, 0.5))
                                          .symbolColor(Color.YELLOW)
-                                         .symbol(Symbol.ELLIPSE_FILLED)
+                                         .symbol(Symbol.TRIANGLE_UP_FILLED)
                                          .doStroke(true)
                                          .doFill(false)
                                          //.timeBased(true)
@@ -169,7 +178,7 @@ public class Demo extends Application {
                                           .coordinatesTextColor(Color.WHITE)
                                           .zoomColor(Color.MAGENTA)
                                           .selectionColor(Color.RED)
-                                          .overlays(imageOverlay, overlay1, overlay2, box1)
+                                          .overlays(shapeOverlay, imageOverlay, overlay1, overlay2, box1)
                                           .overlaysVisible(true)
                                           //.toolboxVisible(false)
                                           //.toolboxPosition(Pos.BOTTOM_RIGHT)

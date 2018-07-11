@@ -19,7 +19,6 @@ package eu.hansolo.fx.dataviewer;
 import eu.hansolo.fx.dataviewer.Overlay.LineStyle;
 import eu.hansolo.fx.dataviewer.Overlay.Symbol;
 import eu.hansolo.fx.dataviewer.event.OverlayEventListener;
-import eu.hansolo.fx.dataviewer.tools.Helper;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -35,6 +34,7 @@ import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Shape;
 import javafx.util.Pair;
 
 import java.util.HashMap;
@@ -146,6 +146,11 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
         return (B)this;
     }
 
+    public final B shape(final Shape SHAPE) {
+        properties.put("shape", new SimpleObjectProperty(SHAPE));
+        return (B)this;
+    }
+
     public final B image(final Image IMAGE) {
         properties.put("image", new SimpleObjectProperty(IMAGE));
         return (B)this;
@@ -229,6 +234,8 @@ public class OverlayBuilder<B extends OverlayBuilder<B>> {
                 CONTROL.setLineStyle(((ObjectProperty<LineStyle>) properties.get(key)).get());
             } else if("visible".equals(key)) {
                 CONTROL.setVisible(((BooleanProperty) properties.get(key)).get());
+            } else if ("shape".equals(key)) {
+                CONTROL.setShape(((ObjectProperty<Shape>) properties.get(key)).get());
             } else if ("image".equals(key)) {
                 CONTROL.setImage(((ObjectProperty<Image>) properties.get(key)).get());
             } else if ("imagePos".equals(key)) {
