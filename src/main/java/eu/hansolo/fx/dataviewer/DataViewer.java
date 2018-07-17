@@ -464,8 +464,8 @@ public class DataViewer extends Region {
         selectionTextWValue = createInfoText("-", Color.rgb(180, 180, 180));
         selectionTextHValue = createInfoText("-", Color.rgb(180, 180, 180));
 
-        pane = new Pane(xAxis, yAxis, chartBackgroundRect, imageView, canvasGrid, crossHairHorizontal, crossHairVertical, overviewRect, viewportRect, canvasOverlays, selectionRect, toolBox,
-                        coordinatesText, centerCrossHorizontal, centerCrossVertical,
+        pane = new Pane(xAxis, yAxis, chartBackgroundRect, imageView, canvasGrid, overviewRect, viewportRect, canvasOverlays, selectionRect, toolBox,
+                        coordinatesText, crossHairHorizontal, crossHairVertical, centerCrossHorizontal, centerCrossVertical,
                         infoBox, selectionTextX, selectionTextXValue, selectionTextY, selectionTextYValue, selectionTextW, selectionTextWValue, selectionTextH, selectionTextHValue);
 
         getChildren().setAll(pane);

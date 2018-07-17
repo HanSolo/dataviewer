@@ -167,7 +167,7 @@ public class Demo extends Application {
         mainDataViewer = DataViewerBuilder.create()
                                           .image(new Image(Demo.class.getResourceAsStream("background.png")))
                                           .decimals(3)
-                                          .xAxisMin(1)
+                                          .xAxisMin(-2)
                                           .xAxisMax(2)
                                           .yAxisMin(1)
                                           .yAxisMax(2)
