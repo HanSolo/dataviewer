@@ -142,6 +142,7 @@ public class Axis extends Region {
         this(MIN_VALUE, MAX_VALUE, ORIENTATION, TYPE, POSITION, "");
     }
     public Axis(final double MIN_VALUE, final double MAX_VALUE, final Orientation ORIENTATION, final AxisType TYPE, final Position POSITION, final String TITLE) {
+        if (Double.compare(MIN_VALUE, MAX_VALUE) == 0) { throw new IllegalArgumentException("Min and max value cannot be equal"); }
         if (VERTICAL == ORIENTATION) {
             if (Position.LEFT != POSITION && Position.RIGHT != POSITION && Position.CENTER != POSITION) {
                 throw new IllegalArgumentException("Wrong combination of orientation and position!");
@@ -229,6 +230,7 @@ public class Axis extends Region {
 
     public double getMinValue() {  return null == minValue ? _minValue : minValue.get();  }
     public void setMinValue(final double VALUE) {
+        if (Double.compare(VALUE, getMaxValue()) == 0) { throw new IllegalArgumentException("Min and max value cannot be equal"); }
         if (null == minValue) {
             if (VALUE > getMaxValue()) { setMaxValue(VALUE); }
             _minValue = Helper.clamp(-Double.MAX_VALUE, getMaxValue(), VALUE);
@@ -239,7 +241,10 @@ public class Axis extends Region {
     public DoubleProperty minValueProperty() {
         if (null == minValue) {
             minValue = new DoublePropertyBase(_minValue) {
-                @Override protected void invalidated() { if (getValue() > getMaxValue()) setMaxValue(getValue()); }
+                @Override protected void invalidated() {
+                    if (Double.compare(get(), getMaxValue()) == 0) { throw new IllegalArgumentException("Min and max value cannot be equal"); }
+                    if (getValue() > getMaxValue()) setMaxValue(getValue());
+                }
                 @Override public Object getBean() {  return Axis.this;  }
                 @Override public String getName() {  return "minValue"; }
             };
@@ -249,6 +254,7 @@ public class Axis extends Region {
 
     public double getMaxValue() { return null == maxValue ? _maxValue : maxValue.get(); }
     public void setMaxValue(final double VALUE) {
+        if (Double.compare(VALUE, getMinValue()) == 0) { throw new IllegalArgumentException("Min and max value cannot be equal"); }
         if (null == maxValue) {
             if (VALUE < getMinValue()) { setMinValue(VALUE); }
             _maxValue = Helper.clamp(getMinValue(), Double.MAX_VALUE, VALUE);
@@ -259,7 +265,10 @@ public class Axis extends Region {
     public DoubleProperty maxValueProperty() {
         if (null == maxValue) {
             maxValue = new DoublePropertyBase(_maxValue) {
-                @Override protected void invalidated() { if (get() < getMinValue()) setMinValue(get()); }
+                @Override protected void invalidated() {
+                    if (Double.compare(get(), getMinValue()) == 0) { throw new IllegalArgumentException("Min and max value cannot be equal"); }
+                    if (get() < getMinValue()) setMinValue(get());
+                }
                 @Override public Object getBean() { return Axis.this; }
                 @Override public String getName() { return "maxValue"; }
             };
@@ -812,6 +821,13 @@ public class Axis extends Region {
             };
         }
         return titleFontSize;
+    }
+
+    private boolean validateRange(final double MIN_VALUE, final double MAX_VALUE) {
+        if (MAX_VALUE < MIN_VALUE) return false;
+        if (MIN_VALUE > MAX_VALUE) return false;
+        if (Double.compare(MIN_VALUE, MAX_VALUE) == 0) return false;
+        return true;
     }
 
     private void calcAutoScale() {
