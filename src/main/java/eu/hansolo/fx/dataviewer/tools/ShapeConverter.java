@@ -329,60 +329,63 @@ public class ShapeConverter {
 
     // ******************** Convert Shape to Canvas Path **********************
     public static void drawShapeToCtx(final Shape SHAPE, final GraphicsContext CTX, final Paint FILL, final Paint STROKE) {
-        drawShapeToCtx(SHAPE, 0, 0, 1, 1, CTX, FILL, STROKE);
+        drawShapeToCtx(SHAPE, CTX.getCanvas().getWidth(), CTX.getCanvas().getHeight(), 0, 0, 1, 1, CTX, FILL, STROKE);
     }
-    public static void drawShapeToCtx(final Shape SHAPE, final double MIN_X, final double MIN_Y, final double STEP_X, final double STEP_Y,
+    public static void drawShapeToCtx(final Shape SHAPE,
+                                      final double CHART_WIDTH, final double CHART_HEIGHT,
+                                      final double MIN_X, final double MIN_Y,
+                                      final double STEP_X, final double STEP_Y,
                                       final GraphicsContext CTX, final Paint FILL, final Paint STROKE) {
         CTX.setStroke(STROKE);
         CTX.setFill(FILL);
         if (Line.class.equals(SHAPE.getClass())) {
             Line line = (Line) SHAPE;
-            CTX.strokeLine((line.getStartX() - MIN_X) * STEP_X, (line.getStartY() - MIN_Y) * STEP_Y, (line.getEndX() - MIN_X) * STEP_X, (line.getEndY() - MIN_Y) * STEP_Y);
+            CTX.strokeLine((line.getStartX() - MIN_X) * STEP_X, CHART_HEIGHT - (line.getStartY() - MIN_Y) * STEP_Y, (line.getEndX() - MIN_X) * STEP_X, CHART_HEIGHT - (line.getEndY() - MIN_Y) * STEP_Y);
         } else if (Arc.class.equals(SHAPE.getClass())) {
             Arc arc = (Arc) SHAPE;
-            CTX.strokeArc(((arc.getCenterX() - arc.getRadiusX()) - MIN_X) * STEP_X, ((arc.getCenterY() - arc.getRadiusY()) - MIN_Y) * STEP_Y, (arc.getRadiusX() * 2) * STEP_X, (arc.getRadiusY() * 2) * STEP_Y, arc.getStartAngle(), arc.getLength(), arc.getType());
+            CTX.strokeArc(((arc.getCenterX() - arc.getRadiusX()) - MIN_X) * STEP_X, CHART_HEIGHT - ((arc.getCenterY() + arc.getRadiusY()) - MIN_Y) * STEP_Y, (arc.getRadiusX() * 2) * STEP_X, (arc.getRadiusY() * 2) * STEP_Y, arc.getStartAngle(), arc.getLength(), arc.getType());
         } else if (QuadCurve.class.equals(SHAPE.getClass())) {
             QuadCurve quadCurve = (QuadCurve) SHAPE;
             CTX.beginPath();
-            CTX.quadraticCurveTo((quadCurve.getControlX() - MIN_X) * STEP_X, (quadCurve.getControlY() - MIN_Y) * STEP_Y, (quadCurve.getStartX() - MIN_X) * STEP_X, (quadCurve.getEndY() - MIN_Y) * STEP_Y);
+            CTX.quadraticCurveTo((quadCurve.getControlX() - MIN_X) * STEP_X, CHART_HEIGHT - (quadCurve.getControlY() - MIN_Y) * STEP_Y, (quadCurve.getStartX() - MIN_X) * STEP_X, CHART_HEIGHT - (quadCurve.getEndY() - MIN_Y) * STEP_Y);
             CTX.closePath();
             CTX.stroke();
         } else if (CubicCurve.class.equals(SHAPE.getClass())) {
             CubicCurve cubicCurve = (CubicCurve) SHAPE;
             CTX.beginPath();
-            CTX.bezierCurveTo((cubicCurve.getControlX1() - MIN_X) * STEP_X, (cubicCurve.getControlY1() - MIN_Y) * STEP_Y, (cubicCurve.getControlX2() - MIN_X) * STEP_X, (cubicCurve.getControlY2() - MIN_Y) * STEP_Y, (cubicCurve.getStartX() - MIN_X) * STEP_X, (cubicCurve.getEndY() - MIN_Y) * STEP_Y);
+            CTX.bezierCurveTo((cubicCurve.getControlX1() - MIN_X) * STEP_X, CHART_HEIGHT - (cubicCurve.getControlY1() - MIN_Y) * STEP_Y, (cubicCurve.getControlX2() - MIN_X) * STEP_X, CHART_HEIGHT - (cubicCurve.getControlY2() - MIN_Y) * STEP_Y, (cubicCurve.getStartX() - MIN_X) * STEP_X, CHART_HEIGHT - (cubicCurve.getEndY() - MIN_Y) * STEP_Y);
             CTX.closePath();
             CTX.stroke();
         } else if (Rectangle.class.equals(SHAPE.getClass())) {
             Rectangle rectangle = (Rectangle) SHAPE;
-            CTX.fillRect((rectangle.getX() - MIN_X) * STEP_X, (rectangle.getY() - MIN_Y) * STEP_Y, rectangle.getWidth() * STEP_X, rectangle.getHeight() * STEP_Y);
-            CTX.strokeRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+            CTX.fillRect((rectangle.getX() - MIN_X) * STEP_X, CHART_HEIGHT - (rectangle.getY() - MIN_Y) * STEP_Y, rectangle.getWidth() * STEP_X, rectangle.getHeight() * STEP_Y);
+            CTX.strokeRect((rectangle.getX() - MIN_X) * STEP_X, CHART_HEIGHT - (rectangle.getY() - MIN_Y) * STEP_Y, rectangle.getWidth() * STEP_X, rectangle.getHeight() * STEP_Y);
         } else if (Circle.class.equals(SHAPE.getClass())) {
             Circle circle = (Circle) SHAPE;
-            CTX.fillOval(((circle.getCenterX() - circle.getRadius()) - MIN_X) * STEP_X, ((circle.getCenterY() - circle.getRadius()) - MIN_Y) * STEP_Y, (circle.getRadius() * 2) * STEP_X, (circle.getRadius() * 2) * STEP_Y);
-            CTX.strokeOval(((circle.getCenterX() - circle.getRadius()) - MIN_X) * STEP_X, ((circle.getCenterY() - circle.getRadius()) - MIN_Y) * STEP_Y, (circle.getRadius() * 2) * STEP_X, (circle.getRadius() * 2) * STEP_Y);
+            CTX.fillOval(((circle.getCenterX() - circle.getRadius()) - MIN_X) * STEP_X, CHART_HEIGHT - ((circle.getCenterY() + circle.getRadius()) - MIN_Y) * STEP_Y, (circle.getRadius() * 2) * STEP_X, (circle.getRadius() * 2) * STEP_Y);
+            CTX.strokeOval(((circle.getCenterX() - circle.getRadius()) - MIN_X) * STEP_X, CHART_HEIGHT - ((circle.getCenterY() + circle.getRadius()) - MIN_Y) * STEP_Y, (circle.getRadius() * 2) * STEP_X, (circle.getRadius() * 2) * STEP_Y);
         } else if (Ellipse.class.equals(SHAPE.getClass())) {
             Ellipse ellipse = (Ellipse) SHAPE;
-            CTX.fillOval(((ellipse.getCenterX() - ellipse.getRadiusX()) - MIN_X) * STEP_X, ((ellipse.getCenterY() - ellipse.getRadiusY()) - MIN_Y) * STEP_Y, (ellipse.getRadiusX() * 2) * STEP_X, (ellipse.getRadiusY() * 2) * STEP_Y);
-            CTX.strokeOval(((ellipse.getCenterX() - ellipse.getRadiusX()) - MIN_X) * STEP_X, ((ellipse.getCenterY() - ellipse.getRadiusY()) - MIN_Y) * STEP_Y, (ellipse.getRadiusX() * 2) * STEP_X, (ellipse.getRadiusY() * 2) * STEP_Y);
+            CTX.fillOval(((ellipse.getCenterX() - ellipse.getRadiusX()) - MIN_X) * STEP_X, CHART_HEIGHT - ((ellipse.getCenterY() + ellipse.getRadiusY()) - MIN_Y) * STEP_Y, (ellipse.getRadiusX() * 2) * STEP_X, (ellipse.getRadiusY() * 2) * STEP_Y);
+            CTX.strokeOval(((ellipse.getCenterX() - ellipse.getRadiusX()) - MIN_X) * STEP_X, CHART_HEIGHT - ((ellipse.getCenterY() + ellipse.getRadiusY()) - MIN_Y) * STEP_Y, (ellipse.getRadiusX() * 2) * STEP_X, (ellipse.getRadiusY() * 2) * STEP_Y);
         } else if (Text.class.equals(SHAPE.getClass())) {
             Text text = (Text) SHAPE;
-            CTX.fillText(text.getText(), (text.getX() - MIN_X) * STEP_X, (text.getY() - MIN_Y) * STEP_Y);
+            CTX.fillText(text.getText(), (text.getX() - MIN_X) * STEP_X, CHART_HEIGHT - (text.getY() - MIN_Y) * STEP_Y);
         } else if (Path.class.equals(SHAPE.getClass())) {
             Path path = (Path) SHAPE;
             CTX.beginPath();
             for (PathElement element : path.getElements()) {
                 if (MoveTo.class.equals(element.getClass())) {
-                    CTX.moveTo((((MoveTo) element).getX() - MIN_X) * STEP_X, (((MoveTo) element).getY() - MIN_Y) * STEP_Y);
+                    CTX.moveTo((((MoveTo) element).getX() - MIN_X) * STEP_X, CHART_HEIGHT - (((MoveTo) element).getY() - MIN_Y) * STEP_Y);
                 } else if (LineTo.class.equals(element.getClass())) {
-                    CTX.moveTo((((LineTo) element).getX() - MIN_X) * STEP_X, (((LineTo) element).getY() - MIN_Y) * STEP_Y);
+                    CTX.moveTo((((LineTo) element).getX() - MIN_X) * STEP_X, CHART_HEIGHT - (((LineTo) element).getY() - MIN_Y) * STEP_Y);
                 } else if (CubicCurveTo.class.equals(element.getClass())) {
-                    CTX.bezierCurveTo((((CubicCurveTo) element).getControlX1() - MIN_X) * STEP_X, (((CubicCurveTo) element).getControlY1() - MIN_Y) * STEP_Y,
-                                      (((CubicCurveTo) element).getControlX2() - MIN_X) * STEP_X, (((CubicCurveTo) element).getControlY2() - MIN_Y) * STEP_Y,
-                                           (((CubicCurveTo) element).getX() - MIN_X) * STEP_X, (((CubicCurveTo) element).getY() - MIN_Y) * STEP_Y);
+                    CTX.bezierCurveTo((((CubicCurveTo) element).getControlX1() - MIN_X) * STEP_X, CHART_HEIGHT - (((CubicCurveTo) element).getControlY1() - MIN_Y) * STEP_Y,
+                                      (((CubicCurveTo) element).getControlX2() - MIN_X) * STEP_X, CHART_HEIGHT - (((CubicCurveTo) element).getControlY2() - MIN_Y) * STEP_Y,
+                                           (((CubicCurveTo) element).getX() - MIN_X) * STEP_X, CHART_HEIGHT - (((CubicCurveTo) element).getY() - MIN_Y) * STEP_Y);
                 } else if (QuadCurveTo.class.equals(element.getClass())) {
-                    CTX.quadraticCurveTo((((QuadCurveTo) element).getControlX() - MIN_X) * STEP_X, (((QuadCurveTo) element).getControlY() - MIN_Y) * STEP_Y,
-                                             (((QuadCurveTo) element).getX() - MIN_X) * STEP_X, (((QuadCurveTo) element).getY() - MIN_Y) * STEP_Y);
+                    CTX.quadraticCurveTo((((QuadCurveTo) element).getControlX() - MIN_X) * STEP_X, CHART_HEIGHT - (((QuadCurveTo) element).getControlY() - MIN_Y) * STEP_Y,
+                                             (((QuadCurveTo) element).getX() - MIN_X) * STEP_X, CHART_HEIGHT - (((QuadCurveTo) element).getY() - MIN_Y) * STEP_Y);
                 } else if (ArcTo.class.equals(element.getClass())) {
 
                 } else if (ClosePath.class.equals(element.getClass())) {
@@ -397,7 +400,7 @@ public class ShapeConverter {
             List<Double> coordinates = polygon.getPoints();
             for (int i = 0 ; i < noOfPoints ; i += 2) {
                 pointsX[i] = (coordinates.get(i) - MIN_X) * STEP_X;
-                pointsY[i] = (coordinates.get(i + 1) - MIN_Y) * STEP_Y;
+                pointsY[i] = CHART_HEIGHT - (coordinates.get(i + 1) - MIN_Y) * STEP_Y;
             }
             CTX.fillPolygon(pointsX, pointsY, noOfPoints);
             CTX.strokePolygon(pointsX, pointsY, noOfPoints);
@@ -409,7 +412,7 @@ public class ShapeConverter {
             List<Double> coordinates = polyline.getPoints();
             for (int i = 0 ; i < noOfPoints ; i += 2) {
                 pointsX[i] = (coordinates.get(i) - MIN_X) * STEP_X;
-                pointsY[i] = (coordinates.get(i + 1) - MIN_Y) * STEP_Y;
+                pointsY[i] = CHART_HEIGHT - (coordinates.get(i + 1) - MIN_Y) * STEP_Y;
             }
             CTX.fillPolygon(pointsX, pointsY, noOfPoints);
             CTX.strokePolygon(pointsX, pointsY, noOfPoints);

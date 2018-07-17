@@ -28,6 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Ellipse;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 
@@ -55,7 +56,7 @@ public class Demo extends Application {
                                              .fill(Color.rgb(255, 0, 0, 0.5))
                                              .doFill(true)
                                              .doStroke(false)
-                                             .shape(new Ellipse(1.5, 1.5, 0.25, 0.125))
+                                             .shape(new Ellipse(1.6, 1.4, 0.25, 0.125))
                                              .build();
 
         String xyPairs1  = "1.0,1.0, 1.1,1.07, 1.2,1.17, 1.3,1.22, 1.4,1.29, 1.5,1.29, 1.6,1.31, 1.7,1.42, 1.8,1.56, 1.9,1.69, 2.0,1.85";
@@ -167,7 +168,7 @@ public class Demo extends Application {
         mainDataViewer = DataViewerBuilder.create()
                                           .image(new Image(Demo.class.getResourceAsStream("background.png")))
                                           .decimals(3)
-                                          .xAxisMin(-2)
+                                          .xAxisMin(1)
                                           .xAxisMax(2)
                                           .yAxisMin(1)
                                           .yAxisMax(2)

@@ -2041,7 +2041,7 @@ public class DataViewer extends Region {
 
                 if (null != overlay.getShape()) {
                     Shape shape = overlay.getShape();
-                    ShapeConverter.drawShapeToCtx(shape, minX, minY, stepX, stepY, ctxOverlays, overlay.isDoFill() ? overlay.getFill() : Color.TRANSPARENT, overlay.isDoStroke() ? overlay.getStroke() : Color.TRANSPARENT);
+                    ShapeConverter.drawShapeToCtx(shape, chartWidth, chartHeight, minX, minY, stepX, stepY, ctxOverlays, overlay.isDoFill() ? overlay.getFill() : Color.TRANSPARENT, overlay.isDoStroke() ? overlay.getStroke() : Color.TRANSPARENT);
                 }
 
                 if (null != overlay.getImage()) {
